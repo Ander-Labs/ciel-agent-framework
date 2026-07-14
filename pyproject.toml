@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ciel"
+version = "0.2.0"
+description = "Ciel Agent Framework - Enterprise multi-agent harness, model-agnostic, deploy-agnostic"
+readme = "README.md"
+license = { text = "AGPL-3.0-or-later" }
+requires-python = ">=3.14"
+authors = [
+    { name = "Ciel Agent Framework Authors" }
+]
+keywords = ["agent", "harness", "multi-agent", "orchestration", "llm", "enterprise"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.14",
+]
+
+dependencies = [
+    "pydantic>=2.6",
+    "pyyaml>=6.0",
+    "sqlalchemy>=2.0",
+    "aiofiles>=23.2",
+    "httpx>=0.27",
+    "tenacity>=9.0",
+    "rich>=13.7",
+    "typer>=0.12",
+    "croniter>=5.0",
+    "python-dotenv>=1.0",
+    "uv>=0.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/ciel-agent-framework/ciel"
+Repository = "https://github.com/ciel-agent-framework/ciel"
+Issues = "https://github.com/ciel-agent-framework/ciel/issues"
+Changelog = "https://github.com/ciel-agent-framework/ciel/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.24"]
+docs = ["mkdocs-material", "mkdocstrings[python]"]
+acp = ["fastapi>=0.112", "uvicorn>=0.30"]
+gateway = ["fastapi>=0.112", "uvicorn>=0.30", "mcp>=1.2"]
+security = ["python-dotenv>=1.0"]
+observability = ["opentelemetry-api>=1.20", "opentelemetry-sdk>=1.20", "prometheus-client>=0.20"]
+messaging = ["slack-sdk>=3.27"]
+board = ["sqlalchemy>=2.0"]
+
+[project.scripts]
+ciel = "ciel.cli.main:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501", "B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

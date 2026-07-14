@@ -1,0 +1,156 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ciel.fullname" . }}-config
+  labels:
+    {{- include "ciel.labels" . | nindent 4 }}
+data:
+  # Tenant por defecto del gateway (multi-tenancy estricto, no se relaja).
+  CIEL_TENANT: {{ .Values.config.tenant | quote }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ciel.fullname" . }}
+  labels:
+    {{- include "ciel.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ciel.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ciel.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["serve", "--host", "0.0.0.0", "--port", "8080"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "ciel.fullname" . }}-config
+          env:
+            - name: CIEL_TENANT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "ciel.fullname" . }}-config
+                  key: CIEL_TENANT
+            {{- if .Values.gateway.providerUrl }}
+            - name: CIEL_PROVIDER_URL
+              value: {{ .Values.gateway.providerUrl | quote }}
+            {{- end }}
+            {{- if .Values.gateway.model }}
+            - name: CIEL_MODEL
+              value: {{ .Values.gateway.model | quote }}
+            {{- end }}
+            {{- if .Values.gateway.providerApiKeySecret }}
+            - name: CIEL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.gateway.providerApiKeySecret }}
+                  key: {{ .Values.gateway.providerApiKeyKey }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.audit.enabled }}
+          volumeMounts:
+            - name: audit
+              mountPath: {{ .Values.audit.mountPath }}
+          {{- end }}
+      {{- if .Values.audit.enabled }}
+      volumes:
+        - name: audit
+          persistentVolumeClaim:
+            claimName: {{ include "ciel.fullname" . }}-audit
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ha.podAntiAffinity.enabled }}
+      # Anti-affinity: esparcir réplicas entre nodos distintos (HA).
+      affinity:
+        {{- with .Values.affinity }}
+        # Affinity base configurada por el usuario.
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    {{- include "ciel.selectorLabels" . | nindent 20 }}
+                topologyKey: {{ .Values.ha.podAntiAffinity.topologyKey }}
+      {{- else if .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ha.topologySpreadConstraints.enabled }}
+      # Topology spread: distribución uniforme por zona/nodo.
+      topologySpreadConstraints:
+        - maxSkew: {{ .Values.ha.topologySpreadConstraints.maxSkew }}
+          topologyKey: {{ .Values.ha.topologySpreadConstraints.topologyKey }}
+          whenUnsatisfiable: {{ .Values.ha.topologySpreadConstraints.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- include "ciel.selectorLabels" . | nindent 14 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ciel.fullname" . }}
+  labels:
+    {{- include "ciel.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "ciel.selectorLabels" . | nindent 4 }}
+{{- if .Values.audit.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "ciel.fullname" . }}-audit
+  labels:
+    {{- include "ciel.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.audit.storage }}
+{{- end }}

@@ -1,0 +1,15 @@
+{{- if .Values.ha.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "ciel.fullname" . }}-pdb
+  labels:
+    {{- include "ciel.labels" . | nindent 4 }}
+spec:
+  # Garantiza que al menos minAvailable réplicas sigan sirviendo durante un
+  # drain de nodo o un rolling update del Deployment.
+  minAvailable: {{ .Values.ha.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "ciel.selectorLabels" . | nindent 6 }}
+{{- end }}

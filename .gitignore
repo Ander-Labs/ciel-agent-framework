@@ -1,0 +1,48 @@
+# Python / build
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Test / coverage caches
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Databases / runtime state (multi-tenancy stores, checkpoints, queues)
+*.sqlite3
+*.sqlite
+*.db
+ciel_queue.sqlite3
+
+# Temp / OS junk
+tmp_*
+*.tmp
+*.stackdump
+.DS_Store
+Thumbs.db
+
+# Local secrets / env
+.env
+.env.*
+secrets.yaml
+CIEL_*.json
+
+# Docs temp
+docs/sdk/.hermes-tmp.*
+deploy/example-enterprise/.hermes-tmp.*
+
+# Editor
+.vscode/
+.idea/
+*.swp

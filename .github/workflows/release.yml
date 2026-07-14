@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+# Only one release run at a time per ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python 3.14
+        run: uv python install 3.14
+
+      - name: Build distribution artifacts
+        run: uv build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.os }}
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # Optional PyPI publish step.
+  #
+  # It is intentionally DISABLED so we never publish by accident. To enable:
+  #   1. Add a repository secret named CIEL_PYPI_TOKEN (a PyPI API token).
+  #   2. Uncomment the `publish` job below and its `needs: [build]` link.
+  # ---------------------------------------------------------------------------
+  # publish:
+  #   name: publish to PyPI
+  #   runs-on: ubuntu-latest
+  #   needs: [build]
+  #   environment: pypi
+  #   permissions:
+  #     contents: read
+  #   steps:
+  #     - name: Download all build artifacts
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         path: dist
+  #         pattern: dist-*
+  #         merge-multiple: true
+  #
+  #     - name: Publish to PyPI
+  #       env:
+  #         UV_PUBLISH_TOKEN: ${{ secrets.CIEL_PYPI_TOKEN }}
+  #       run: uv publish

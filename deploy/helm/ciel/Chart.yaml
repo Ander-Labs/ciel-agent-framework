@@ -1,0 +1,15 @@
+apiVersion: v2
+name: ciel
+description: Ciel Agent Framework gateway — control plane + MCP host + webhook
+type: application
+version: 0.2.0
+appVersion: "0.2.0"
+home: https://github.com/ciel-agent-framework/ciel
+sources:
+  - https://github.com/ciel-agent-framework/ciel
+keywords:
+  - agent
+  - llm
+  - gateway
+  - mcp
+  - multi-tenant

@@ -1,0 +1,82 @@
+# Valores por defecto para el Helm chart de Ciel.
+# Multi-tenancy: defaultTenant es el tenant por defecto propagado cuando el
+# request no trae tenant_id. El gateway sigue exigiendo tenant_id en runtime/tool
+# si no hay default configurado. No se relaja el aislamiento.
+
+# HA: por defecto arrancamos 2 réplicas para sobrevivir a la caída de 1.
+replicaCount: 2
+
+image:
+  repository: ciel
+  tag: "0.2.0"
+  pullPolicy: IfNotPresent
+
+# Configuración del gateway (inyectada como variables de entorno).
+gateway:
+  # Tenant por defecto. Sobrescribe con --set gateway.defaultTenant=...
+  defaultTenant: "acme"
+  # Proveedor LLM remoto (OpenAI-compatible). Dejar vacío para arranque offline
+  # (echo provider). En producción usar Secret, no plaintext.
+  providerUrl: ""
+  providerApiKeySecret: ""   # nombre del Secret que contiene CIEL_API_KEY
+  providerApiKeyKey: "CIEL_API_KEY"
+  model: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+
+# Recursos y probes. /health en las tres superficies responde 200.
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Volumen de audit (JSONL por session/tenant) + checkpoint compartido para HA.
+# En HA se recomienda un StorageClass ReadWriteMany (o StatefulSet con backend
+# compartido) para que N réplicas rehidraten el mismo checkpoint tras caída.
+audit:
+  enabled: true
+  storage: 1Gi
+  mountPath: /var/lib/ciel/audit
+
+# High Availability: PDB + HPA + anti-affinity + topology spread.
+ha:
+  # PodDisruptionBudget: garantiza que al menos minAvailable réplicas sigan
+  # disponibles durante un drain/upgrade.
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  # HorizontalPodAutoscaler: escala por CPU y por requests/segundo (HPA
+  # externo vía metrics-server para CPU; la métrica de requests requiere un
+  # adaptador de métricas custom — ver docs/runbooks/runbook_scaling.md).
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    # Réplicas objetivo por defecto si no hay métricas (fallback).
+    targetReplicas: 2
+  # Anti-affinity: esparcir réplicas entre nodos distintos para sobrevivir a
+  # caída de nodo.
+  podAntiAffinity:
+    enabled: true
+    topologyKey: kubernetes.io/hostname
+  # Topology spread: distribuir réplicas de forma uniforme por zona/nodo.
+  topologySpreadConstraints:
+    enabled: true
+    maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway
+
+# ConfigMap con el tenant por defecto (consumido por el deployment).
+config:
+  tenant: "acme"
+
+nodeSelector: {}
+tolerations: []
+# Affinity base del deployment (se suma a la podAntiAffinity de HA).
+affinity: {}

@@ -1,0 +1,39 @@
+{{- if .Values.ha.hpa.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "ciel.fullname" . }}-hpa
+  labels:
+    {{- include "ciel.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "ciel.fullname" . }}
+  minReplicas: {{ .Values.ha.hpa.minReplicas }}
+  maxReplicas: {{ .Values.ha.hpa.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          # Requiere metrics-server instalado en el cluster.
+          averageUtilization: {{ .Values.ha.hpa.targetCPUUtilizationPercentage }}
+  # Escalado por tasa de requests requiere un adaptador de métricas custom
+  # (ver docs/runbooks/runbook_scaling.md); se documenta pero no se habilita
+  # por defecto para no romper clusters sin el adaptador.
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+{{- end }}

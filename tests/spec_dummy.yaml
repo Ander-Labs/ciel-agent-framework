@@ -1,0 +1,5 @@
+name: sample
+topology: pipeline
+steps:
+  - id: step-1
+    kind: step

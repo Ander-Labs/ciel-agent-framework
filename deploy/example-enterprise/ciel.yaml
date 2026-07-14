@@ -1,0 +1,13 @@
+# Manifesto de despliegue central de Ciel (ciel.yaml).
+# Une providers + tenant por defecto + politique de aprobación en un solo archivo.
+# Las API keys se referencian por variable de entorno, nunca en plaintext.
+
+default_tenant: "acme"
+approval_policy: "manual"   # manual | smart | yolo
+
+providers:
+  - name: "openai"
+    base_url: "https://api.openai.com/v1"
+    api_key_env: "CIEL_API_KEY"        # inyectar desde Secret en prod
+    default_model: "gpt-4o-mini"
+    tenant: "acme"

@@ -1,0 +1,33 @@
+# Ciel Agent Framework — docker compose
+# Control gateway (composed control + MCP host + webhook) with a persistent
+# audit log volume. Multi-tenancy is enforced: set CIEL_TENANT to your default
+# tenant. For a real LLM, set CIEL_PROVIDER_URL + CIEL_API_KEY (+ CIEL_MODEL).
+
+services:
+  ciel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ciel:0.1.0
+    container_name: ciel-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      CIEL_TENANT: "acme"
+      # Optional remote LLM (OpenAI-compatible). Leave unset to boot offline.
+      # CIEL_PROVIDER_URL: "https://api.openai.com/v1"
+      # CIEL_API_KEY: "${CIEL_API_KEY}"
+      # CIEL_MODEL: "gpt-4o-mini"
+    volumes:
+      - ciel-audit:/var/lib/ciel/audit
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx,sys; sys.exit(0 if httpx.get('http://localhost:8080/health').status_code==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  ciel-audit:
+    driver: local
