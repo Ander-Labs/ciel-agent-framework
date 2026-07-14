@@ -6,6 +6,10 @@ Dates use release date. Versions follow SemVer with initial pre-release `0.1.0`.
 
 ## [0.3.0] — Fase 9 (Extensibilidad: plugins, providers, tools, DX) — 2026-07-14
 
+**Publicado en PyPI**: `pip install mana-ciel==0.3.0` (distribución `mana-ciel`,
+import `ciel`). Verificado: install limpio + `default_registry().list_providers()`
+expone openai/anthropic/gemini + toolset `builtins`.
+
 ### Added
 - **Plugin system** (`ciel.plugins`): `PluginRegistry` + `default_registry()` que
   auto-registra builtins y descubre plugins de terceros vía entry points
