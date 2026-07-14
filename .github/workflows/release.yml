@@ -48,28 +48,35 @@ jobs:
           retention-days: 7
 
   # ---------------------------------------------------------------------------
-  # Optional PyPI publish step.
+  # PyPI publish step (ENABLED for v0.3.0).
   #
-  # It is intentionally DISABLED so we never publish by accident. To enable:
-  #   1. Add a repository secret named CIEL_PYPI_TOKEN (a PyPI API token).
-  #   2. Uncomment the `publish` job below and its `needs: [build]` link.
+  # Requires a repository secret named CIEL_PYPI_TOKEN (a PyPI API token).
+  # The `environment: pypi` is an optional manual-approval gate — configure it
+  # in repo Settings > Environments if you want a human gate before publish.
+  # Build artifacts from all 3 OSes are merged and published in one step.
   # ---------------------------------------------------------------------------
-  # publish:
-  #   name: publish to PyPI
-  #   runs-on: ubuntu-latest
-  #   needs: [build]
-  #   environment: pypi
-  #   permissions:
-  #     contents: read
-  #   steps:
-  #     - name: Download all build artifacts
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         path: dist
-  #         pattern: dist-*
-  #         merge-multiple: true
-  #
-  #     - name: Publish to PyPI
-  #       env:
-  #         UV_PUBLISH_TOKEN: ${{ secrets.CIEL_PYPI_TOKEN }}
-  #       run: uv publish
+  publish:
+    name: publish to PyPI
+    runs-on: ubuntu-latest
+    needs: [build]
+    environment: pypi
+    permissions:
+      contents: read
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: dist-*
+          merge-multiple: true
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Publish to PyPI
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.CIEL_PYPI_TOKEN }}
+        run: uv publish

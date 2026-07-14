@@ -42,7 +42,8 @@ ciel --help
 - [Conceptos](concepts.md): Agent, Runtime, Tool, Provider, Tenant, Graph, Gateway.
 - [Providers](providers.md): usar OpenAI/Anthropic o registrar el tuyo.
 - [Tools](tools.md): definir y ejecutar herramientas.
-- [Plugins](plugins.md): extender sin tocar el core (preview v0.3.0).
+- [Plugins](plugins.md): extender sin tocar el core (entry points).
+- [Tutorial plugin](tutorial_plugin.md): escribe tu primer plugin end-to-end.
 - [Deploy](deploy.md): Docker, Compose, Helm HA, `ciel serve`.
 - [Configuración](configuration.md): `ciel.yaml`, env vars, tenants.
 

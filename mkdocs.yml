@@ -25,6 +25,7 @@ nav:
   - Providers: providers.md
   - Tools: tools.md
   - Plugins: plugins.md
+  - Tutorial plugin: tutorial_plugin.md
   - Deploy: deploy.md
   - Configuración: configuration.md
 markdown_extensions:

@@ -45,6 +45,10 @@ Ciel is extensible via plugins: install a third-party package exposing a
 `ciel.plugins` entry point and its providers/tools are auto-discovered — no core
 edits. See `docs/guide/` for the developer guide.
 
+> **Extensible vía plugins**: instala un paquete que exponga el entry point
+> `ciel.plugins` y sus providers/tools se auto-descubren. Ver
+> [`docs/guide/plugins.md`](docs/guide/plugins.md).
+
 ## Requirements
 
 - Python >= 3.11
@@ -145,8 +149,8 @@ Entregado en esta sesión:
 
 Verificación actual: `uv run pytest tests/` → 194 passed, 1 skipped. `uv run ciel rbac list-roles` y `uv run ciel cost status --tenant t1` ejecutan offline.
 
-### Fase 8 — Deploy HA + observabilidad + madurez: 🔄 EN PROGRESO
-Helm HA, OTel centralizado, adapters de canal y HIL en grafo ya entregados y verificados por smoke test; tests formales, runbooks y release v0.2.0 en curso.
+### Fase 8 — Deploy HA + observabilidad + madurez: ✅ Cerrada
+Helm HA, OTel centralizado, adapters de canal (Teams/Discord/WebUI) y HIL en grafo, runbooks y release v0.2.0 ya entregados y verificados.
 
 Entregado en esta sesión:
 - **Helm HA**: chart `deploy/helm/ciel` con `replicaCount: 2`, `PodDisruptionBudget` (minAvailable 1), `HorizontalPodAutoscaler` (2–10 réplicas), `podAntiAffinity` y `topologySpreadConstraints`.
@@ -156,7 +160,26 @@ Entregado en esta sesión:
 - **Human-in-the-loop (HIL)** en `ciel.orchestration.graph`: `GraphNode.require_approval`, `GraphRunner.approve()`/`deny()` con chequeo RBAC (`approve:*`). Pausa y reanuda tras aprobación de rol autorizado.
 - **Runbooks** (`docs/runbooks/`): deploy, incidente, rollback, backup de audit/board, escalado HPA.
 
-Verificación actual (smoke): `ciel observe` confirma exporter; grafo con `require_approval` pausa y reanuda tras `approve:*`; tests formales de Fase 8 en curso (`test_fase8_hil_otel_test.py`, `test_fase8_adapters_test.py`).
+Verificación actual (smoke): `ciel observe` confirma exporter; grafo con `require_approval` pausa y reanuda tras `approve:*`; tests formales de Fase 8 cerrados (`test_fase8_hil_otel_test.py`, `test_fase8_adapters_test.py`).
+
+### Fase 9 — Plugin system + extensibilidad: ✅ Cerrada
+Plugin system, provider Gemini, tools de fábrica, scaffold offline y corrección de bug raíz en la firma de callable de tool.
+
+Entregado en esta sesión:
+- **Plugin system** (`ciel.plugins`): `default_registry` con auto-descubrimiento vía entry points `ciel.providers`, `ciel.tools` y `ciel.agents`. Los paquetes de terceros que exponen un entry point `ciel.plugins` se registran sin editar el core.
+- **GeminiProvider** añadido a `ciel.providers` builtins (modelo-agnóstico, offline-safe con echo de respaldo).
+- **Tools de fábrica** (`ciel.runtime.tools_builtins`): `echo`, `datetime`, `http_get`, `file_read`, `shell` — disponibles out-of-the-box y auto-registradas.
+- **`ciel init` scaffold offline**: `ciel init my-agent` genera un proyecto ejecutable sin dependencias de red.
+- **Bug raíz corregido**: `ciel.runtime.ToolProvider.execute` usa ahora la firma oficial de callable — `callable_(arguments, *, tool_call_id, tenant_id) -> ToolResult | dict | Any` — alineando tools builtin, de plugin y de usuario.
+
+Verificación actual: `uv run pytest tests/` → 230 passed, 2 skipped (cifra global de la suite tras Fase 9).
+
+## Extending Ciel
+
+Ciel está diseñado para extenderse sin tocar el core:
+
+- **Plugins**: instala cualquier paquete que exponga un entry point `ciel.plugins` (grupos `ciel.providers` / `ciel.tools` / `ciel.agents`) y Ciel lo auto-descubre vía `ciel.plugins.default_registry`. Ver [`docs/guide/plugins.md`](docs/guide/plugins.md).
+- **Tools propias**: implementa la firma oficial de tool callable — `callable_(arguments, *, tool_call_id, tenant_id) -> ToolResult | dict | Any` — usada por `ciel.runtime.ToolProvider.execute` (builtins, plugins y tools de usuario comparten la misma firma). Ver [`docs/guide/tools.md`](docs/guide/tools.md).
 
 ## License
 
