@@ -33,6 +33,18 @@ ciel --help
 > Note: the PyPI package is named **mana-ciel** (the name `ciel` was already taken
 > on PyPI). You still `import ciel` and run `ciel` — only the install name differs.
 
+## Quick start
+
+```bash
+pip install mana-ciel
+ciel init my-agent          # scaffold a runnable project (offline-safe)
+cd my-agent && uv run python my_agent_agent.py
+```
+
+Ciel is extensible via plugins: install a third-party package exposing a
+`ciel.plugins` entry point and its providers/tools are auto-discovered — no core
+edits. See `docs/guide/` for the developer guide.
+
 ## Requirements
 
 - Python >= 3.11

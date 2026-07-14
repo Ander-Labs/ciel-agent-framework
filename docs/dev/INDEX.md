@@ -1,6 +1,6 @@
 # Índice de desarrollo — Ciel Agent Framework
 
-Última actualización: 2026-07-14. Estado verificado: **216 passed, 1 skipped**
+Última actualización: 2026-07-14. Estado verificado: **228 passed, 2 skipped**
 (base Fases 0–7). Fase 8 EN PROGRESO: Helm HA, OTel centralizado, adapters
 Teams/Discord/WebUI, HIL en grafo ya entregados; tests formales y runbooks en curso.
 release v0.1.0 (wheels + CHANGELOG), Dockerfile / Compose / Helm HA operativos,

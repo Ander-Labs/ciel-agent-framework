@@ -167,14 +167,29 @@ def _run_stream(runtime, request: ChatRequest, tenant: Optional[str]) -> None:
     console.print()  # salto de línea final
     if not full:
         console.print("[yellow](sin contenido del proveedor)[/]")
+@app.command("init")
+def init(
+    path: Path = typer.Argument(Path("."), help="Target directory (created if missing)"),
+    force: bool = typer.Option(False, "--force", help="Overwrite existing files"),
+) -> None:
+    """Scaffold a new Ciel project (pyproject + agent + ciel.yaml). Offline-safe."""
+    from ciel.cli.scaffold import scaffold_project
+
+    target = Path(path)
+    created = scaffold_project(target, force=force)
+    console.print(f"[green]Initialized Ciel project at[/] {target}")
+    for rel in created:
+        console.print(f"  [dim]+ {rel}[/]")
+
+
 @app.command("compression")
 def compression(
     target_dir: Path = typer.Option(..., "--target-dir", exists=True, file_okay=False, help="Project root for context loading"),
     max_chars: int = typer.Option(20000, "--max-chars", help="Context render budget in characters"),
 ) -> None:
-    from cielo.runtime.context import load_project_context
-    from cielo.runtime.context_compression import compress_context
-    from cielo.runtime import ChatMessage
+    from ciel.runtime.context import load_project_context
+    from ciel.runtime.context_compression import compress_context
+    from ciel.runtime import ChatMessage
 
     context = load_project_context(path=str(target_dir))
     rendered = context.render(max_chars=max_chars) if context.files else ""

@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 Dates use release date. Versions follow SemVer with initial pre-release `0.1.0`.
 
+## [0.3.0] — Fase 9 (Extensibilidad: plugins, providers, tools, DX) — EN PROGRESO (2026-07-14)
+
+### Added
+- **Plugin system** (`ciel.plugins`): `PluginRegistry` + `default_registry()` que
+  auto-registra builtins y descubre plugins de terceros vía entry points
+  (`ciel.providers`, `ciel.tools`, `ciel.agents`). Permite extender el framework
+  sin tocar el core (`pip install mi-plugin-ciel`).
+- **Providers empaquetados**: `GeminiProvider` (`ciel.providers.gemini`) se suma a
+  `OpenAICompatibleProvider` y `AnthropicProvider` (ya existentes). Los tres se
+  registran como builtins en `default_registry()`.
+- **Tools de fábrica** (`ciel.runtime.tools_builtins`): toolset `builtins` con
+  `echo`, `datetime` (offline), `http_get` (inyectable mock client), `file_read`,
+  `shell` (sandboxeados vía `ciel.sandbox`).
+- **`ciel init`**: scaffold de proyecto (pyproject + agent + ciel.yaml),
+  offline-safe e idempotente. El agente generado corre sin red ni API keys.
+- **Bug fix** en `ToolRegistry.register_tool`: el `ToolsetSchema.tools` ahora se
+  mantiene sincronizado (antes `get_toolset_schema().tools` salía vacío).
+
+### Verification
+- `uv run pytest tests/` → **228 passed, 2 skipped** (215 base + 13 Fase 9:
+  `test_fase9_plugins_test.py` 8, `test_fase9_tools_test.py` 5).
+- Smoke: `uv run ciel init /tmp/demo` genera proyecto que corre offline
+  (`echo: hello`). `default_registry()` expone openai/anthropic/gemini + toolset
+  `builtins`. `GeminiProvider` offline (sin api_key lanza; con client mock devuelve
+  texto). Docs DX externas en `docs/guide/` (subagente).
+
 ## [0.2.0] — Fase 8 (Deploy HA + observabilidad + madurez) — 2026-07-14
 
 ### Added

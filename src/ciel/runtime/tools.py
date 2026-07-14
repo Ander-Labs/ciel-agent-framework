@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Dict, Mapping, Optional, Sequence
 
 
@@ -337,6 +337,8 @@ class ToolRegistry:
             self._toolsets[toolset] = schema
         self._tools.setdefault(toolset, {})
         self._tools[toolset][tool.spec.name] = tool_obj
+        # Keep the schema's tool list in sync so get_toolset_schema/export_schema reflect registered tools.
+        self._toolsets[toolset] = replace(schema, tools=tuple(t.spec for t in self._tools[toolset].values()))
         if tenant_id:
             self._tenant_tools.setdefault(toolset, {}).setdefault(tenant_id, {})[tool.spec.name] = tool_obj
 
