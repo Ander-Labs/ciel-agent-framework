@@ -61,11 +61,11 @@ class _StubProvider:
 
 
 def _build_specs():
-    def echo(ctx: ToolExecutionContext, **kwargs: Any) -> Any:
-        return kwargs
+    def echo(arguments, *, tool_call_id="", tenant_id=None) -> Any:
+        return arguments
 
-    def add(ctx: ToolExecutionContext, a: float = 0, b: float = 0) -> Any:
-        return a + b
+    def add(arguments, *, tool_call_id="", tenant_id=None) -> Any:
+        return arguments.get("a", 0) + arguments.get("b", 0)
 
     echo_spec = ToolSpec(name="echo", description="Echo args", parameters={"type": "object"})
     add_spec = ToolSpec(name="add", description="Sum", parameters={"type": "object"})

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field, replace
 from typing import Any, Dict, Mapping, Optional, Sequence
 
@@ -68,8 +69,15 @@ class StaticToolProvider(ToolProvider):
         tool = self.registry.get_tool(toolset=target_toolset, name=name)
         if tool is None:
             return ToolResult(id=tool_call_id, name=name, error=f"tool not found: {target_toolset}.{name}", metadata={"tenant_id": tenant_id})
-        output = {"arguments": arguments, "description": tool.spec.description}
-        return ToolResult(id=tool_call_id, name=name, output=output, metadata={"tenant_id": tenant_id})
+        try:
+            result = tool.callable_(arguments, tool_call_id=tool_call_id, tenant_id=tenant_id)
+            if asyncio.iscoroutine(result):
+                result = await result
+        except Exception as exc:  # noqa: BLE001 — surface tool errors as ToolResult
+            return ToolResult(id=tool_call_id, name=name, error=f"{type(exc).__name__}: {exc}", metadata={"tenant_id": tenant_id})
+        if isinstance(result, ToolResult):
+            return result
+        return ToolResult(id=tool_call_id, name=name, output=result, metadata={"tenant_id": tenant_id})
 
 
 class DefaultToolDispatcher:

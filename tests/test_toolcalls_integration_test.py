@@ -22,8 +22,8 @@ from ciel.runtime import (
 def _make_add_toolset() -> ToolRegistry:
     """Registry with a real callable 'add' tool in the 'default' toolset."""
 
-    def add(context, a: int, b: int) -> int:
-        return a + b
+    def add(arguments, *, tool_call_id="", tenant_id=None) -> int:
+        return arguments["a"] + arguments["b"]
 
     registry = ToolRegistry(default_toolset="default")
     registry.register_toolset(

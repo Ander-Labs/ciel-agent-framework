@@ -22,9 +22,22 @@ Dates use release date. Versions follow SemVer with initial pre-release `0.1.0`.
 - **Bug fix** en `ToolRegistry.register_tool`: el `ToolsetSchema.tools` ahora se
   mantiene sincronizado (antes `get_toolset_schema().tools` salía vacío).
 
+### Fixed
+- **`ToolProvider.execute` no ejecutaba el callable de la tool** (bug de raíz). El
+  provider concreto `ciel.runtime.ToolProvider` (usado por `DefaultToolDispatcher`
+  y por tanto por `DefaultAgentRuntime.run_agent_loop`) invocaba el callable con la
+  firma equivocada `callable_(context, **arguments)` → `TypeError`/`output=None`.
+  Corregido a la firma OFICIAL documentada:
+  `callable_(arguments: dict, *, tool_call_id: str, tenant_id: str | None) -> ToolResult | dict | Any`
+  (await si es corrutina; excepciones se capturan en `ToolResult.error`; acepta
+  `ToolResult` o valor crudo). Alineados `examples/quickstart_agent.py`,
+  `tests/gateway_fase4_test.py` y `tests/test_toolcalls_integration_test.py` con
+  la firma oficial. Verificado end-to-end vía dispatcher (no solo llamando el
+  callable directo).
+
 ### Verification
-- `uv run pytest tests/` → **228 passed, 2 skipped** (215 base + 13 Fase 9:
-  `test_fase9_plugins_test.py` 8, `test_fase9_tools_test.py` 5).
+- `uv run pytest tests/` → **230 passed, 2 skipped** (215 base + 13 Fase 9 +
+  2 regresión dispatch: `test_fase9_plugins_test.py` 8, `test_fase9_tools_test.py` 7).
 - Smoke: `uv run ciel init /tmp/demo` genera proyecto que corre offline
   (`echo: hello`). `default_registry()` expone openai/anthropic/gemini + toolset
   `builtins`. `GeminiProvider` offline (sin api_key lanza; con client mock devuelve

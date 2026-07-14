@@ -32,6 +32,7 @@ from ciel.runtime import (
     Tool,
     ToolSpec,
 )
+from ciel.runtime.tools import ToolResult
 
 
 # ---------------------------------------------------------------------------
@@ -67,10 +68,12 @@ class DummyProvider(ChatProvider):
 
 
 # ---------------------------------------------------------------------------
-# 2. Tool propia: una suma simple. El callable recibe (context, **arguments).
+# 2. Tool propia: una suma simple. El callable recibe (arguments, *, tool_call_id, tenant_id).
 # ---------------------------------------------------------------------------
-async def add(*, a: int, b: int, **kwargs: Any) -> Dict[str, Any]:
-    return {"result": a + b}
+def add(arguments, *, tool_call_id="", tenant_id=None) -> ToolResult:
+    a = arguments.get("a", 0)
+    b = arguments.get("b", 0)
+    return ToolResult(id=tool_call_id, name="add", output={"result": a + b})
 
 
 # ---------------------------------------------------------------------------
@@ -117,7 +120,7 @@ async def main() -> int:
     )
 
     print("[quickstart] ejecutando run_agent_loop (offline)...")
-    result = await runtime.run_agent_loop(request=request, toolset="demo")
+    result = await runtime.run_agent_loop(request=request, toolset="demo", tenant_id="default")
 
     print(f"  finish_reason = {result.response.choice.finish_reason}")
     for turn in result.loop_results:
@@ -126,7 +129,7 @@ async def main() -> int:
 
     # Verificación simple para que el script salga con código 0 si todo bien.
     ok = any(
-        tr.output.get("result") == 5
+        tr.output is not None and tr.output.get("result") == 5
         for turn in result.loop_results
         for tr in turn.tool_results
     )

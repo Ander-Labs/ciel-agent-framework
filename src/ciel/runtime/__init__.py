@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import uuid
 from dataclasses import dataclass, field
 from typing import Any, AsyncIterator, Dict, List, Mapping, Optional, Sequence, Type, Union
@@ -42,17 +43,22 @@ class ToolProvider:
             return ToolResult(id=tool_call_id, name=name, error=f"unknown tool: {target_toolset}.{name}", metadata={"tenant_id": tenant_id})
         if getattr(tool, "required_tenant", False) and not tenant_id:
             raise TenantRequired(f"tool '{name}' requires tenant_id, but none was provided.")
-        output: Any = None
-        error: Optional[str] = None
-        if tool.callable_ is not None:
-            context = ToolExecutionContext(tenant_id=tenant_id, toolset=target_toolset, name=name, tool_call_id=tool_call_id, arguments=arguments)
-            try:
-                output = tool.callable_(context, **arguments)
-            except Exception as exc:
-                error = str(exc)
-        else:
+        if tool.callable_ is None:
             output = {"arguments": arguments, "description": tool.spec.description}
-        return ToolResult(id=tool_call_id, name=name, output=output, error=error, metadata={"tenant_id": tenant_id})
+            return ToolResult(id=tool_call_id, name=name, output=output, metadata={"tenant_id": tenant_id})
+        # Official tool callable contract:
+        #   callable_(arguments: dict, *, tool_call_id: str, tenant_id: str | None) -> ToolResult | dict | Any
+        try:
+            result = tool.callable_(arguments, tool_call_id=tool_call_id, tenant_id=tenant_id)
+            if inspect.isawaitable(result):
+                result = await result
+        except Exception as exc:  # noqa: BLE001 — surface tool errors as ToolResult
+            return ToolResult(id=tool_call_id, name=name, error=f"{type(exc).__name__}: {exc}", metadata={"tenant_id": tenant_id})
+        if isinstance(result, ToolResult):
+            if not result.metadata.get("tenant_id"):
+                result.metadata["tenant_id"] = tenant_id
+            return result
+        return ToolResult(id=tool_call_id, name=name, output=result, metadata={"tenant_id": tenant_id})
 
 
 class StaticToolProvider(ToolProvider):

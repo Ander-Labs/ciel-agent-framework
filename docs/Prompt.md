@@ -503,6 +503,57 @@ Resumen de Fase 8 (Ciel Agent Framework) — estado actual
 
  ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
+## 9. PENDIENTE PARA LA TARDE / SIGUIENTE SESIÓN (Fase 9 en curso)
+
+Fecha: 2026-07-14 (tarde). Lo avanzado hasta ahora en la Fase 9 está commiteado
+en `13af11b` (core) y subido a GitHub. Lo que sigue:
+
+### 9.1 Estado verificado de la Fase 9 (commit 13af11b, ya en GitHub)
+- `ciel.plugins`: PluginRegistry + default_registry() (builtins + entry points).
+- `ciel.providers.gemini`: GeminiProvider (builtin con OpenAI/Anthropic).
+- `ciel.runtime.tools_builtins`: toolset `builtins` (echo, datetime, http_get, file_read, shell).
+- `ciel init`: scaffold offline-safe e idempotente (genera proyecto que corre sin red).
+- Bug fix: ToolRegistry.register_tool sincroniza ToolsetSchema.tools.
+- Tests Fase 9: 13 nuevos (8 plugins + 5 tools). Regresión: 228 passed, 2 skipped.
+- `docs/guide/*.md` (9 archivos) + `mkdocs.yml` ESCRITOS pero aún NO commiteados.
+- `examples/quickstart_agent.py` reescrito para correr offline.
+
+### 9.2 BUG CONOCIDO QUE QUEDÓ A MEDIAS (prioridad 1 al retomar)
+`examples/quickstart_agent.py` corre pero `tool=add output=None` → OK=False.
+Causa raíz ya aislada: `ToolProvider.execute` (src/ciel/runtime/tools.py ~l64)
+NO ejecutaba el callable (devolvía placeholder). Ya se corrigió para invocar
+`tool.callable_(arguments, tool_call_id=..., tenant_id=...)` con manejo de
+async/excepciones. TRAS el fix, el output sigue saliendo None → el runtime
+(`DefaultAgentRuntime.run_agent_loop`) probablemente NO pasa por
+`DefaultToolDispatcher.dispatch`, sino por otro camino (quizá
+`TenantAwareToolProvider.execute(context=...)` o invoca el callable con firma
+distinta). Pasos exactos para cerrar:
+  1. Leer `DefaultAgentRuntime.run_agent_loop` (buscar en src/ciel/runtime/agent*.py
+     o donde esté) y ver CÓMO ejecuta los `tool_calls` del provider (¿usa
+     dispatcher.dispatch / dispatch_all, o provider.execute con context?).
+  2. Alinear la firma del callable del example (`def add(arguments, *, tool_call_id, tenant_id) -> ToolResult`)
+     con lo que espera ese camino. El contrato oficial documentado en docs/guide/tools.md
+     es `callable_(arguments: dict, *, tool_call_id, tenant_id) -> ToolResult|dict`.
+  3. Verificar: `uv run examples/quickstart_agent.py` debe salir exit 0 con OK=True.
+  4. Añadir test formal de dispatch end-to-end (runtime + dispatcher + tool real)
+     en tests/test_fase9_tools_test.py para evitar regresión de este bug.
+
+### 9.3 Tareas pendientes de la Fase 9 (checklist)
+- [ ] Cerrar bug de ejecución de tool vía runtime (9.2).
+- [ ] Commit de `docs/guide/` + `mkdocs.yml` + `examples/quickstart_agent.py` (fix) → commit "Fase 9 (docs): guía DX externa + mkdocs + example offline".
+- [ ] Regresión completa `uv run pytest tests/` verde tras el fix de tools.py.
+- [ ] `ciel doctor` / smoke: `uv run ciel init /tmp/x && correr agente`.
+- [ ] Tag v0.3.0 + (opcional) publicar en PyPI `mana-ciel` v0.3.0 (requiere token; el job de GH Actions release.yml tiene publish comentado — descomentar + secret CIEL_PYPI_TOKEN).
+- [ ] CHANGELOG 0.3.0: mover de "EN PROGRESO" a cerrado; añadir sección de bug fix de ToolProvider.execute.
+- [ ] TASKS.md / INDEX.md / FASE9_PROGRESS.md: marcar Fase 9 CERRADA.
+
+### 9.4 Notas de contexto para no perder el hilo
+- El subagente de documentación DX TIMEOUT (600s) sin entregar; por eso docs/guide
+  los escribí yo manualmente. No reintentar subagente para esto.
+- mkdocs-material está en el extra `docs` de pyproject (no requiere install extra para leer .md; solo para `mkdocs build`).
+- El token PyPI usado para v0.2.0 NO se guardó; para v0.3.0 pedirlo de nuevo o usar el secret de GitHub.
+- Convención: imports `ciel`, CLI `ciel`, paquete PyPI `mana-ciel`, repo `Ander-Labs/ciel-agent-framework`.
+
 ⚠ Iteration budget reached (60/60) — response may be incomplete
   ✅ Agent updated — 33 tool(s) available
   💾 Self-improvement review: Patched SKILL.md in skill 'ciel-agent-framework-dev' (1 replacement). · Memory updated

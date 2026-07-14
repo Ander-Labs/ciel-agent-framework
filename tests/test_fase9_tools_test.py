@@ -123,3 +123,56 @@ def test_scaffold_generated_agent_runs_offline(tmp_path: Path):
     )
     assert proc.returncode == 0, proc.stderr
     assert "echo:" in proc.stdout
+
+
+@pytest.mark.asyncio
+async def test_real_toolprovider_executes_callable_via_dispatcher():
+    """Regression: the REAL ciel.runtime.ToolProvider must invoke the tool
+    callable through DefaultToolDispatcher.dispatch (not return a placeholder /
+    output=None). Guards against the ToolProvider.execute bug where the callable
+    was invoked with the wrong signature callable_(context, **arguments).
+    """
+    from ciel.runtime import ToolProvider as RuntimeToolProvider
+    from ciel.runtime import DefaultToolDispatcher as RuntimeDispatcher
+
+    def add(arguments, *, tool_call_id="", tenant_id=None):
+        return arguments["a"] + arguments["b"]
+
+    registry = ToolRegistry(default_toolset="default")
+    registry.register_tool(
+        "default",
+        Tool(spec=ToolSpec(name="add", description="sum", parameters={"type": "object"}),
+             callable_=add),
+    )
+    provider = RuntimeToolProvider(registry=registry, require_tenant_on_execution=False)
+    dispatcher = RuntimeDispatcher(provider, default_toolset="default")
+
+    result = await dispatcher.dispatch(name="add", arguments={"a": 2, "b": 3}, tool_call_id="c1", tenant_id="t1")
+    assert result.error is None
+    assert result.output == 5
+    assert result.metadata.get("tenant_id") == "t1"
+
+
+@pytest.mark.asyncio
+async def test_real_toolprovider_async_callable_and_toolresult_passthrough():
+    """The real ToolProvider must await coroutine callables and pass through a
+    ToolResult returned directly by the tool."""
+    from ciel.runtime import ToolProvider as RuntimeToolProvider
+    from ciel.runtime import DefaultToolDispatcher as RuntimeDispatcher
+
+    async def aecho(arguments, *, tool_call_id="", tenant_id=None):
+        return ToolResult(id=tool_call_id, name="aecho", output={"echo": arguments.get("text")})
+
+    registry = ToolRegistry(default_toolset="default")
+    registry.register_tool(
+        "default",
+        Tool(spec=ToolSpec(name="aecho", description="async echo", parameters={"type": "object"}),
+             callable_=aecho),
+    )
+    provider = RuntimeToolProvider(registry=registry, require_tenant_on_execution=False)
+    dispatcher = RuntimeDispatcher(provider, default_toolset="default")
+
+    result = await dispatcher.dispatch(name="aecho", arguments={"text": "hi"}, tool_call_id="c2", tenant_id="t9")
+    assert result.error is None
+    assert result.output == {"echo": "hi"}
+    assert result.metadata.get("tenant_id") == "t9"
