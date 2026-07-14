@@ -3,18 +3,18 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ciel"
+name = "mana-ciel"
 version = "0.2.0"
 description = "Ciel Agent Framework - Enterprise multi-agent harness, model-agnostic, deploy-agnostic"
 readme = "README.md"
 license = { text = "AGPL-3.0-or-later" }
-requires-python = ">=3.14"
+requires-python = ">=3.11"
 authors = [
     { name = "Ciel Agent Framework Authors" }
 ]
 keywords = ["agent", "harness", "multi-agent", "orchestration", "llm", "enterprise"]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 4 - Beta",
     "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.14",
@@ -35,10 +35,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ciel-agent-framework/ciel"
-Repository = "https://github.com/ciel-agent-framework/ciel"
-Issues = "https://github.com/ciel-agent-framework/ciel/issues"
-Changelog = "https://github.com/ciel-agent-framework/ciel/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/Ander-Labs/ciel-agent-framework"
+Repository = "https://github.com/Ander-Labs/ciel-agent-framework"
+Issues = "https://github.com/Ander-Labs/ciel-agent-framework/issues"
+Changelog = "https://github.com/Ander-Labs/ciel-agent-framework/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-asyncio>=0.24"]

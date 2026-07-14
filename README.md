@@ -13,13 +13,30 @@ Enterprise-grade framework to build model-agnostic, deploy-agnostic autonomous a
 | `ciel.gateway` | Platform adapters, messaging gateway |
 | `ciel.security` | Approvals, secret redaction, PII scrubber, sandbox |
 | `ciel.observability` | Traces, logs, metrics, audit |
-| `cli.entorno` | Execution backends: local, docker, ssh, processpool |
+| `ciel.entorno` | Execution backends: local, docker, ssh, processpool |
 | `ciel.acp` | ACP server for IDE integrations |
+
+## Installation
+
+```bash
+pip install mana-ciel        # PyPI distribution name
+# or, with uv:
+uv pip install mana-ciel
+```
+
+The import name stays `ciel`; the CLI command is `ciel`:
+
+```bash
+ciel --help
+```
+
+> Note: the PyPI package is named **mana-ciel** (the name `ciel` was already taken
+> on PyPI). You still `import ciel` and run `ciel` — only the install name differs.
 
 ## Requirements
 
-- Python >= 3.14
-- Package manager/distribution: **uv**
+- Python >= 3.11
+- Package manager/distribution: **uv** (recommended) or pip
 
 ## Example
 
