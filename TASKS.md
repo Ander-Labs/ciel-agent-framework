@@ -170,7 +170,7 @@ Usuario sin rol correcto es rechazado; trail de auditoría es inmutable y verifi
 
 ---
 
-- [x] ## Fase 8: Deploy HA + madurez producción (estado: EN PROGRESO — Helm HA, OTel centralizado, adapters Teams/Discord/WebUI y HIL en grafo entregados; tests formales + runbooks + release v0.2.0 en curso)
+- [x] ## Fase 8: Deploy HA + madurez producción (estado: CERRADA — Helm HA, OTel centralizado, adapters Teams/Discord/WebUI, HIL en grafo y release v0.2.0 entregados y verificados)
 # Helm/observabilidad/deploy
 - [x] `deploy/helm/ciel`: HA — `replicaCount: 2`, `PodDisruptionBudget` (minAvailable: 1), `HorizontalPodAutoscaler` (2–10 réplicas, target CPU 70%), `podAntiAffinity` (topologyKey kubernetes.io/hostname), `topologySpreadConstraints` (maxSkew 1). Templates `hpa.yaml` + `poddisruptionbudget.yaml`.
 - [x] `ciel.observability.otel`: OTel centralizado — `init_tracing(*, otlp_endpoint)` (OTLP exporter si endpoint, si no `InMemorySpanExporter` offline-safe), `current_tracer()`, `span_count()` (cuenta spans del exporter in-memory; **corregido** para opentelemetry-sdk 1.x: `provider._active_span_processor._span_processors[].span_exporter`). `ciel observe` (CLI) + flag `--otel`/`--otel-endpoint` en `ciel serve`.
@@ -180,22 +180,22 @@ Usuario sin rol correcto es rechazado; trail de auditoría es inmutable y verifi
 - [x] `docs/runbooks/`: runbook_deploy, runbook_incident, runbook_rollback, runbook_backup (audit/board SQLite), runbook_scaling (HPA).
 - [x] Tests formales Fase 8: `tests/test_fase8_hil_otel_test.py` (HIL + OTel, 8 tests) y `tests/test_fase8_adapters_test.py` (adapters + gateway routers, 14 tests) — ✅ verdes.
 - [x] Regresión completa `uv run pytest tests/` verde: **216 passed, 1 skipped** (194 base F0–7 + 22 Fase 8).
-- [ ] Release v0.2.0: tag + wheels + CHANGELOG (sección `## [0.2.0]`) + doc de upgrade desde v0.1.0.
+- [x] Release v0.2.0: tag + wheels + CHANGELOG (sección `## [0.2.0]`) + doc de upgrade desde v0.1.0.
 
 ### Criterion of advance
 Chart despliega N≥2 réplicas con PDB + HPA y sobrevive a la caída de 1; OTel envía traces/metrics (o in-memory en tests) sin romper offline; `ciel chat`/`ciel flow` reciben/emiten por Teams/Discord/Web UI (fakes en tests); nodo de grafo `require_approval` pausa y reanuda tras aprobación de rol autorizado (`approve:*`); runbooks documentados; release v0.2.0 etiquetado; suite verde (194 + N tests Fase 8).
 
 ---
 
-- [x] ## Fase 9: Extensibilidad — plugin system, providers reales, tools de fábrica, DX (estado: EN PROGRESO — core + tests verdes; docs DX externas en curso vía subagente)
+- [x] ## Fase 9: Extensibilidad — plugin system, providers reales, tools de fábrica, DX (estado: CERRADA — core + tests + docs DX externas + regresión verdes; bug raíz ToolProvider.execute corregido)
 - [x] `ciel.plugins`: `PluginRegistry` + `default_registry()` — auto-registra builtins y descubre plugins de terceros por entry points (`ciel.providers`, `ciel.tools`, `ciel.agents`). Extensión sin tocar el core.
 - [x] `ciel.providers.gemini`: `GeminiProvider` (Google AI Studio/Vertex) se suma a `OpenAICompatibleProvider` y `AnthropicProvider` (builtins registrados).
 - [x] `ciel.runtime.tools_builtins`: toolset `builtins` (`echo`, `datetime`, `http_get`, `file_read`, `shell`) sandboxeado.
 - [x] `ciel init`: scaffold de proyecto (pyproject + agent + ciel.yaml), offline-safe e idempotente; el agente generado corre sin red.
 - [x] Bug fix: `ToolRegistry.register_tool` sincroniza `ToolsetSchema.tools` (antes `get_toolset_schema().tools` salía vacío).
 - [x] Tests formales Fase 9: `tests/test_fase9_plugins_test.py` (8) + `tests/test_fase9_tools_test.py` (5) — ✅ verdes.
-- [ ] Docs DX externas `docs/guide/` (quickstart ejecutable, conceptos, providers, tools, plugins, deploy) + `mkdocs.yml` + `examples/quickstart_agent.py` — EN CURSO (subagente).
-- [ ] Regresión completa + commit + push (tag v0.3.0).
+- [x] Docs DX externas `docs/guide/` (quickstart ejecutable, conceptos, providers, tools, plugins, deploy) + `mkdocs.yml` + `examples/quickstart_agent.py` — ✅ verdes (230 passed, 2 skipped).
+- [x] Regresión completa + commit + push (tag v0.3.0).
 
 ### Criterion of advance
 Tercero puede `pip install mi-plugin-ciel` y su provider/tool aparece en el registry sin import manual; `ciel init` genera proyecto que corre offline; docs externas con quickstart ejecutable; suite verde.

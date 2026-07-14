@@ -48,5 +48,5 @@ ciel --help
 
 ## Estado
 
-- PyPI: `mana-ciel` (v0.2.0 publicada; Fase 9 en curso).
+- PyPI: `mana-ciel` (v0.3.0 publicada; Fase 9 extensibilidad).
 - Repo: https://github.com/Ander-Labs/ciel-agent-framework

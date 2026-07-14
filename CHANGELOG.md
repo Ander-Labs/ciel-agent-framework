@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 Dates use release date. Versions follow SemVer with initial pre-release `0.1.0`.
 
-## [0.3.0] — Fase 9 (Extensibilidad: plugins, providers, tools, DX) — EN PROGRESO (2026-07-14)
+## [0.3.0] — Fase 9 (Extensibilidad: plugins, providers, tools, DX) — 2026-07-14
 
 ### Added
 - **Plugin system** (`ciel.plugins`): `PluginRegistry` + `default_registry()` que

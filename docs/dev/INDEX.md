@@ -1,8 +1,9 @@
 # Índice de desarrollo — Ciel Agent Framework
 
-Última actualización: 2026-07-14. Estado verificado: **228 passed, 2 skipped**
-(base Fases 0–7). Fase 8 EN PROGRESO: Helm HA, OTel centralizado, adapters
-Teams/Discord/WebUI, HIL en grafo ya entregados; tests formales y runbooks en curso.
+Última actualización: 2026-07-14. Estado verificado: **230 passed, 2 skipped**
+(base Fases 0–8 + Fase 9). Fase 8 CERRADA: Helm HA, OTel centralizado, adapters
+Teams/Discord/WebUI, HIL en grafo y release v0.2.0 entregados. Fase 9 CERRADA:
+plugin system, GeminiProvider, tools de fábrica y `ciel init` offline.
 release v0.1.0 (wheels + CHANGELOG), Dockerfile / Compose / Helm HA operativos,
 Fase 5 CERRADA (módulos `graph`, `flows`, `chat`, `root` y `session`), Fase 6 CERRADA
 (módulo `agent`: `EventLoop` durable + `AutonomousAgent`) y Fase 7 CERRADA
@@ -23,7 +24,8 @@ Fases 0–4 CERRADAS.
 | 5 | Best-of-breed | ✅ Cerrada (graph/flows/chat/root/session) | ver `docs/dev/FASE5_DESIGN.md` + `TASKS.md` |
 | 6 | Agencia autónoma en bucle | ✅ Cerrada (`agent`: EventLoop + AutonomousAgent) | ver `docs/dev/FASE6_DESIGN.md` + `TASKS.md` |
 | 7 | Enterprise duro | ✅ Cerrada (`enterprise`: rbac/oidc, audit inmutable, cost, secrets, ratelimit) | ver `docs/dev/FASE7_DESIGN.md` + `TASKS.md` |
-| 8 | Deploy HA + observabilidad + madurez | 🔄 EN PROGRESO (Helm HA/OTel/adapters/HIL entregados; tests + runbooks + release v0.2.0 pendientes) | ver `docs/dev/FASE8_DESIGN.md`, `FASE8_PROGRESS.md`, `docs/runbooks/` |
+| 8 | Deploy HA + observabilidad + madurez | ✅ Cerrada (Helm HA/OTel/adapters/HIL entregados + release v0.2.0) | ver `docs/dev/FASE8_DESIGN.md`, `FASE8_PROGRESS.md`, `docs/runbooks/` |
+| 9 | Extensibilidad — plugin system, providers reales, tools de fábrica, DX | ✅ Cerrada (ciel.plugins/default_registry, entry points ciel.providers/tools/agents, GeminiProvider builtin, tools_builtins echo/datetime/http_get/file_read/shell, ciel init offline, bug raíz ToolProvider.execute corregido) | ver `docs/dev/FASE9_PROGRESS.md` |
 
 ## Documentos de progreso por fase
 
@@ -40,7 +42,8 @@ Fases 0–4 CERRADAS.
 - `docs/dev/FASE7_PROGRESS.md` — Enterprise duro (RBAC/OIDC, audit inmutable, cost, secrets, ratelimit)
 - `docs/dev/FASE7_DESIGN.md` — Diseño Fase 7 (contratos exactos de `ciel.enterprise`)
 - `docs/dev/FASE8_DESIGN.md` — Diseño Fase 8 (checkpoint compartido HA, contrato adapters, diseño HIL)
-- `docs/dev/FASE8_PROGRESS.md` — Deploy HA + observabilidad + madurez (entregado: Helm HA, OTel, adapters, HIL; en curso: tests, runbooks, release v0.2.0)
+- `docs/dev/FASE8_PROGRESS.md` — Deploy HA + observabilidad + madurez (entregado: Helm HA, OTel, adapters, HIL; release v0.2.0 CERRADA)
+- `docs/dev/FASE9_PROGRESS.md` — Extensibilidad: plugin system (ciel.plugins/default_registry + entry points), GeminiProvider builtin, tools_builtins, ciel init offline, bug raíz ToolProvider.execute corregido
 - `docs/runbooks/` — runbook_deploy / runbook_incident / runbook_rollback / runbook_backup / runbook_scaling
 - `docs/dev/PENDIENTES.md` — Gap analysis Fases 7/8 (lo que falta por terminar)
 - `docs/dev/CIERRE_SESION.md` — Cierre con subagentes: board SQLite, SSE, +5 tests (116)
@@ -67,7 +70,7 @@ Fases 0–4 CERRADAS.
 ## Comandos de verificación
 
 ```bash
-uv run pytest -q            # esperado: 194 passed, 1 skipped (base F0-7); + N tests Fase 8 en curso
+uv run pytest -q            # esperado: 230 passed, 2 skipped (base F0-8 + Fase 9: test_fase9_plugins 8 + test_fase9_tools 5)
 uv build                   # genera wheels en dist/
 uv run ciel serve          # arranca app compuesta (control + MCP + webhook)
 uv run ciel swarm run      # orquestación desde AgentSpec YAML
