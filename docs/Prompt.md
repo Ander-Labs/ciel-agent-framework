@@ -298,11 +298,18 @@ Reutiliza lo YA existente en el repo (no reimplementar): `deploy/helm/ciel`
    correcto (documenta por qué). No re-ejecutes ciegamente si falla idéntico: cambia
    estrategia.
 7. **Documentar.** Actualiza `FASE{N}_PROGRESS.md`, `INDEX.md`, `TASKS.md`,
-   `ROADMAP.md`, `CHANGELOG.md` (y `README.md` Status si cambia fase). Marca lo
+   `docs/roadmap.md` (público) y `CHANGELOG.md` (y `README.md` Status si cambia fase).
+   El diario interno vive en `docs/dev/` (no es doc oficial). Marca lo
    entregado; deja claro lo pendiente.
 8. **Reportar.** Resumen ejecutable: qué se entregó, verificación (pytest/cli),
    bugs de raíz corregidos, y el SIGUIENTE paso sugerido. Luego detente y espera
    instrucción (el usuario trabaja en modo "mañana seguimos").
+
+> **Prompt de continuación autocontenido:** ver `docs/dev/LOOP_PROMPT.md` —
+> estado real al cierre de cada sesión, correcciones ya aplicadas (p.ej.
+> `ci.yml` rama `master` + `--all-extras`, doc oficial en GitHub Pages),
+> pendientes verificados y comandos de verificación copiar-pegar. Úsalo para
+> retomar sin re-explorar.
 
 ---
 
