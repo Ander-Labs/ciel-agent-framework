@@ -38,7 +38,7 @@ dependencies = [
 Homepage = "https://github.com/Ander-Labs/ciel-agent-framework"
 Repository = "https://github.com/Ander-Labs/ciel-agent-framework"
 Issues = "https://github.com/Ander-Labs/ciel-agent-framework/issues"
-Changelog = "https://github.com/Ander-Labs/ciel-agent-framework/blob/main/CHANGELOG.md"
+Changelog = "https://github.com/Ander-Labs/ciel-agent-framework/blob/master/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-asyncio>=0.24"]

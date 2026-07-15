@@ -1,19 +1,19 @@
 # CI & Release (GitHub Actions)
 
-This document describes the GitHub Actions workflows shipped in
-[`.github/workflows/`](https://github.com/ciel-agent-framework/ciel/tree/main/.github/workflows).
-The repository is not yet initialized as a git repo locally; commit these files once the
-repo is created so CI lights up on the first push.
+[`.github/workflows/`](https://github.com/Ander-Labs/ciel-agent-framework/tree/master/.github/workflows).
+
+The repository is already initialized and pushed; CI runs on every push to `master`
+and on `v*` tags.
 
 ## Tools
 
 - **[uv](https://docs.astral.sh/uv/)** — fast Python package/workspace manager (installed via
   `astral-sh/setup-uv@v5`, with a cache keyed on `uv.lock`).
-- **Python 3.14** — pinned via `uv python install 3.14` (project requires `>=3.14`).
+- **Python 3.14** — pinned via `uv python install 3.14` (project requires `>=3.11`).
 
 ## `ci.yml` — Continuous Integration
 
-**Triggers:** push to `main`, push of any `v*` tag, and pull requests against `main`.
+**Triggers:** push to `master`, push of any `v*` tag, and pull requests against `master`.
 
 **Matrix:** runs on all three OSes in parallel — `ubuntu-latest`, `windows-latest`,
 `macos-latest` (`fail-fast: false` so one OS failing does not cancel the others).
@@ -23,8 +23,9 @@ repo is created so CI lights up on the first push.
 1. `actions/checkout@v4`
 2. Install `uv` (with dependency cache).
 3. `uv python install 3.14`.
-4. `uv sync --extra gateway --extra acp --extra dev` — installs the project plus the gateway,
-   ACP and dev (pytest) extras.
+4. `uv sync --all-extras` — installs the project plus every optional extra
+   (gateway, acp, observability, messaging, board, security, docs, dev) so the
+   full `tests/` suite can be collected.
 5. `uv run pytest -q` — runs the `tests/` suite quietly.
 
 A `concurrency` group keyed on the workflow + ref auto-cancels superseded runs on the same
@@ -45,23 +46,23 @@ branch/tag.
 4. `actions/upload-artifact@v4` — uploads the build artifacts under the name
    `dist-<os>` (retained 7 days, fails if nothing was produced).
 
-### PyPI publishing (disabled by default)
+### PyPI publishing (enabled)
 
-A `publish` job is included but **commented out** so a tag push never publishes by accident.
-To enable it:
+A `publish` job is included and **enabled**: on a `v*` tag push it downloads all
+per-OS build artifacts into a single `dist/` directory and runs `uv publish`,
+authenticated via the `UV_PUBLISH_TOKEN` environment variable (sourced from the
+repository secret **`CIEL_PYPI_TOKEN`**).
 
-1. Add a repository/organization secret named **`CIEL_PYPI_TOKEN`** containing a PyPI API token.
-2. Uncomment the `publish` job block (and it already declares `needs: [build]`).
-
-It downloads all per-OS artifacts into a single `dist/` directory and runs `uv publish`,
-authenticated via the `UV_PUBLISH_TOKEN` environment variable.
+> Note: the publish step runs on the Linux runner, where `uv publish` with
+> `UV_PUBLISH_TOKEN` works directly. (On Windows runners a known quirk corrupts
+> the env token via CRLF; the Linux runner avoids it.)
 
 ## Local sanity check
 
 Run the same test command the CI uses:
 
 ```bash
-uv sync --extra gateway --extra acp --extra dev
+uv sync --all-extras
 uv run pytest -q
 ```
 

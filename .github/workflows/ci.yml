@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     tags: ["v*"]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 # Cancel in-progress runs for the same ref to save CI minutes.
 concurrency:
@@ -33,8 +33,8 @@ jobs:
       - name: Set up Python 3.14
         run: uv python install 3.14
 
-      - name: Install project (gateway + acp + dev extras)
-        run: uv sync --extra gateway --extra acp --extra dev
+      - name: Install project (all extras)
+        run: uv sync --all-extras
 
       - name: Run tests
         run: uv run pytest -q
