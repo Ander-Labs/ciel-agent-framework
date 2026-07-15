@@ -120,6 +120,11 @@ def init_tracing(
         logger.warning("init_tracing: opentelemetry unavailable; tracing disabled")
         return None
 
+    # OTel forbids re-setting the global provider via the public API
+    # ("Overriding of current TracerProvider is not allowed"); the proxy
+    # also can't be overwritten through set_tracer_provider. We always build
+    # our own provider and force it onto the SDK's global slot so spans land on
+    # the exporter that span_count() inspects (and current_tracer() binds to it).
     resource = Resource.create({SERVICE_NAME: service_name})
     provider: "TracerProvider" = TracerProvider(resource=resource)
 
@@ -139,33 +144,66 @@ def init_tracing(
     else:
         provider.add_span_processor(SimpleSpanProcessor(InMemorySpanExporter()))
 
-    trace.set_tracer_provider(provider)
-    # Guardamos la referencia real (global) para que span_count() no dependa
-    # del proxy global (get_tracer_provider puede devolver un
-    # ProxyTracerProvider si aún no se ha configurado).
+    # OTel forbids re-setting the global provider via the public API
+    # ("Overriding of current TracerProvider is not allowed"). We force our
+    # provider onto the SDK's global slot so spans always land on the exporter
+    # that span_count() inspects (and current_tracer() is bound to it).
+    trace._TRACER_PROVIDER = provider  # type: ignore[attr-defined]
     global _last_provider
     _last_provider = provider
     return provider
 
 
 def _find_in_memory_exporter(provider) -> Optional["InMemorySpanExporter"]:
-    """Navega la estructura real del TracerProvider 1.x para hallar el
-    ``InMemorySpanExporter``.
+    """Navega la estructura REAL del TracerProvider del SDK instalado para
+    hallar el ``InMemorySpanExporter``.
 
-    En opentelemetry-sdk 1.x el provider NO expone ``active_span_processor``
-    publico: usa ``_active_span_processor`` (un ``SynchronousMultiSpanProcessor``
-    o ``ConcurrentMultiSpanProcessor``) que contiene ``_span_processors`` (lista)
-    y cada processor tiene ``span_exporter``. Devuelve el primero que sea
-    ``InMemorySpanExporter`` o ``None``.
+    La forma de acceder al span processor varía entre versiones/builds del
+    SDK:
+
+    * Algunas versiones exponen el metodo publico
+      ``provider.get_active_span_processor()`` (devuelve un
+      ``SynchronousMultiSpanProcessor`` / ``ConcurrentMultiSpanProcessor``),
+      y cada processor hijo tiene el atributo ``span_exporter``.
+    * En opentelemetry-sdk 1.x el provider NO expone ese metodo publico;
+      el atributo real es ``provider._active_span_processor`` (un multiprocesador)
+      que contiene ``_span_processors`` (lista) y cada processor tiene
+      ``span_exporter``.
+
+    El helper soporta AMBAS formas de forma defensiva y se detiene ante el
+    primer ``InMemorySpanExporter`` encontrado. Si el exporter no es
+    in-memory (o no se puede navegar la estructura), devuelve ``None``.
     """
     if provider is None:
         return None
-    asp = getattr(provider, "_active_span_processor", None)
+    # Evita inspeccionar el ProxyTracerProvider del API global (no tiene spans).
+    proxy_types = tuple(
+        t
+        for t in (getattr(trace, "_ProxyTracerProvider", None),)
+        if t is not None
+    )
+    if proxy_types and isinstance(provider, proxy_types):
+        return None
+
+    # (1) API publica si existe.
+    asp = None
+    if hasattr(provider, "get_active_span_processor") and callable(
+        getattr(provider, "get_active_span_processor", None)
+    ):
+        try:
+            asp = provider.get_active_span_processor()
+        except Exception:  # pragma: no cover - defensive
+            asp = None
+    # (2) Fallback a la estructura interna del SDK 1.x.
+    if asp is None:
+        asp = getattr(provider, "_active_span_processor", None)
     if asp is None:
         return None
+
+    # Un multiprocesador contiene _span_processors; un processor unico
+    # expone directamente `span_exporter`.
     processors = getattr(asp, "_span_processors", None)
     if not processors:
-        # Un processor unico (no multi) tambien es posible.
         single = getattr(asp, "span_exporter", None)
         return single if isinstance(single, InMemorySpanExporter) else None
     for proc in processors:
@@ -176,14 +214,16 @@ def _find_in_memory_exporter(provider) -> Optional["InMemorySpanExporter"]:
 
 
 def current_tracer():
-    """Devuelve el tracer global de OTel, o ``None`` si OTel no está disponible.
+    """Devuelve el tracer de OTel, o ``None`` si OTel no está disponible.
 
-    Útil para que el gateway/emisiones de trazas obtengan el tracer sin
-    importar opcionales.
+    Usa el provider real instalado por :func:`init_tracing` (``_last_provider``)
+    en lugar del proxy global, para que las trazas caigan en el exporter que
+    :func:`span_count` inspecciona.
     """
     if not _OTEL_AVAILABLE:
         return None
-    return trace.get_tracer("ciel")
+    provider = _last_provider or trace.get_tracer_provider()
+    return provider.get_tracer("ciel")
 
 
 def span_count() -> int:

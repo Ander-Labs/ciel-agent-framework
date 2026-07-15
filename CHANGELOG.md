@@ -70,10 +70,16 @@ expone openai/anthropic/gemini + toolset `builtins`.
   `GraphPaused`, `GraphApprovalDenied`, `GraphRunner.approve()`/`deny()` con
   chequeo RBAC (`enterprise.rbac.check(action="approve:*")`). El runner pausa y
   persiste `paused=True`; reanuda tras aprobación de rol autorizado.
-- **Runbooks** (`docs/runbooks/`): deploy HA, incidente, rollback, backup de
-  audit/board (SQLite), escalado HPA.
+- **Runbooks** (`docs/runbooks/`): deploy HA (`deploy.md`), incidente (`incident.md`),
+  rollback (`rollback.md`), backup de audit/board (SQLite, `backup.md`), escalado HPA
+  (`hpa.md`).
 
 ### Fixed
+- **Fase 8 — rol `admin` ya incluye `approve:*`**: el HIL (`GraphRunner.approve`)
+  exige el permiso `approve:*` (wildcard `category:*`). El `RBACEngine` se corrigió
+  para que el rol `admin` por defecto cubra `approve:*`; antes el rol admin no lo
+  incluía y el HIL denegaba incluso a administradores. Verificado: `alice` (admin)
+  aprueba; `bob` (viewer) es bloqueado por `RBACError`.
 - `ciel.observability.otel.span_count()` devolvía `-1` siempre: (1) `init_tracing`
   no persistía `_last_provider` (faltaba `global`); (2) accedía a atributos
   inexistentes en opentelemetry-sdk 1.x (`active_span_processor`/`span_exporter`).
@@ -87,6 +93,14 @@ expone openai/anthropic/gemini + toolset `builtins`.
   `span_count() >= 1`; `ciel serve` monta routers Teams/Discord/WebUI
   (`/v1/messaging/{channel}/health` → 200); grafo con `require_approval` pausa y
   reanuda tras aprobación de rol `admin` (`approve:*`), bob (`viewer`) bloqueado.
+
+### Release
+- **Release v0.2.0 etiquetado**: tag git `v0.2.0` creado; wheels generados en
+  `dist/`; esta sección de CHANGELOG (`## [0.2.0]`) publicada; doc de upgrade desde
+  v0.1.0 documentada.
+- **Nota**: la continuación Fase 9 se publicó como **v0.3.0 en PyPI**
+  (`pip install mana-ciel==0.3.0`; distribución `mana-ciel`, import `ciel`). Ver
+  sección `## [0.3.0]` más arriba.
 
 ---
 

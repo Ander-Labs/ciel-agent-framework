@@ -34,9 +34,15 @@ Procedimiento ante incidentes en producción de Ciel Agent Framework (despliegue
 ### 4. Spans/auditoría no aparecen
 - `uv run ciel observe` confirma el exporter. Si se usó `--otel-endpoint`, verificar
   conectividad al collector (Tempo/Jaeger/OTel Collector).
-- El audit immutable (`HashChainAuditSink`) escribe JSONL en el PVC de audit.
+- El audit inmutable (`HashChainAuditSink`) escribe JSONL en el PVC de audit.
+
+### 5. Canal de mensajería caído (Teams/Discord/WebUI)
+- Verificar health del router: `curl -s localhost:8080/v1/messaging/<channel>/health`.
+- Revisar que el adapter correspondiente esté montado en `make_app` (`ciel serve`)
+  y que las rutas de webhook apunten al endpoint correcto.
+- Para pruebas offline usar `FakeAdapter` (`ciel chat --adapter fake`).
 
 ## Comunicación
 - Abrir incidente con: alcance (tenants afectados), síntoma, réplicas afectadas,
   pasos ya intentados. No hacer `helm rollback` ciego sin respaldar primero
-  (ver runbook_rollback.md).
+  (ver `rollback.md`).

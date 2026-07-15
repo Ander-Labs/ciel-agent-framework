@@ -147,10 +147,26 @@ Entregables:
 - [x] OpenTelemetry centralizado: `init_tracing` (OTLP o in-memory), `span_count`, `ciel observe` + flag `--otel` en `ciel serve`
 - [x] Adapters de canal: Teams / Discord / Web UI + FakeAdapter (`ciel.adapters`), routers en `ciel.gateway.messaging` montados en `ciel serve`
 - [x] Human-in-the-loop en grafo: `GraphNode.require_approval`, `GraphRunner.approve`/`deny` con chequeo RBAC `approve:*`
-- [x] Runbooks: deploy / incidente / rollback / backup audit+board / escalado HPA (`docs/runbooks/`)
-- [ ] Tests formales Fase 8 (`test_fase8_hil_otel_test.py`, `test_fase8_adapters_test.py`) — EN CURSO
-- [ ] Regresión completa `uv run pytest` verde (194 + N)
-- [ ] Release v0.2.0 (tag + wheels + CHANGELOG)
+- [x] Runbooks: deploy / incident / rollback / backup audit+board / hpa (`docs/runbooks/`)
+- [x] Tests formales Fase 8 (`test_fase8_hil_otel_test.py`, `test_fase8_adapters_test.py`) — ✅ verdes (8 + 14)
+- [x] Regresión completa `uv run pytest` verde — **216 passed, 1 skipped** (194 base F0–7 + 22 Fase 8)
+- [x] Release v0.2.0 (tag + wheels + CHANGELOG) — ✅ ETIOUETADO (tag git `v0.2.0`)
 
-Criterio de avance: deploy HA en k8s con OTel, backups y rollback; suite verde bajo carga.
+Criterio de avance: deploy HA en k8s con OTel, backups y rollback; suite verde bajo carga. ✅ CUMPLIDO — FASE 8 CERRADA.
+
+---
+
+## Fase 9: Extensibilidad — plugin system, providers reales, tools de fábrica, DX (estado: ✅ CERRADA — publicada en PyPI como `mana-ciel==0.3.0`)
+
+Entregables:
+- [x] Plugin system (`ciel.plugins`): `default_registry` + auto-descubrimiento vía entry points (`ciel.providers`, `ciel.tools`, `ciel.agents`)
+- [x] `GeminiProvider` añadido a `ciel.providers` builtins
+- [x] Tools de fábrica (`ciel.runtime.tools_builtins`): `echo`, `datetime`, `http_get`, `file_read`, `shell`
+- [x] `ciel init` scaffold offline e idempotente
+- [x] Bug raíz corregido: `ToolProvider.execute` usa la firma oficial de callable
+- [x] Docs DX externas `docs/guide/` + `mkdocs.yml`
+- [x] Regresión completa `uv run pytest` verde — **230 passed, 2 skipped** (base 216 + 14 Fase 9)
+- [x] Release v0.3.0 publicado en PyPI (`pip install mana-ciel==0.3.0`)
+
+Criterio de avance: tercero puede `pip install mi-plugin-ciel` y su provider/tool aparece en el registry; `ciel init` genera proyecto offline; docs con quickstart ejecutable; suite verde. ✅ CUMPLIDO — FASE 9 CERRADA.
 

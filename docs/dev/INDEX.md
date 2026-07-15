@@ -44,7 +44,7 @@ Fases 0–4 CERRADAS.
 - `docs/dev/FASE8_DESIGN.md` — Diseño Fase 8 (checkpoint compartido HA, contrato adapters, diseño HIL)
 - `docs/dev/FASE8_PROGRESS.md` — Deploy HA + observabilidad + madurez (entregado: Helm HA, OTel, adapters, HIL; release v0.2.0 CERRADA)
 - `docs/dev/FASE9_PROGRESS.md` — Extensibilidad: plugin system (ciel.plugins/default_registry + entry points), GeminiProvider builtin, tools_builtins, ciel init offline, bug raíz ToolProvider.execute corregido
-- `docs/runbooks/` — runbook_deploy / runbook_incident / runbook_rollback / runbook_backup / runbook_scaling
+- `docs/runbooks/` — deploy / incident / rollback / backup (audit+board SQLite) / hpa
 - `docs/dev/PENDIENTES.md` — Gap analysis Fases 7/8 (lo que falta por terminar)
 - `docs/dev/CIERRE_SESION.md` — Cierre con subagentes: board SQLite, SSE, +5 tests (116)
 
@@ -63,7 +63,7 @@ Fases 0–4 CERRADAS.
 - `docker-compose.yml` — control gateway + volumen de audit
 - `deploy/helm/ciel/` — Chart.yaml, values.yaml, templates (PDB/HPA/Service/Pvc + probes)
 - `deploy/example-enterprise/` — `ciel.yaml` + `config.py` + `serve.py`
-- `docs/runbooks/` — deploy / incidente / rollback / backup audit+board / escalado HPA
+- `docs/runbooks/` — deploy / incident / rollback / backup audit+board / hpa (Fase 8)
 - `CHANGELOG.md` — v0.1.0 (Fase 4) + entradas Fase 5/6/7 (graph, flows/chat/root, agent, enterprise)
 - `dist/` — wheels generados (`uv build`)
 
@@ -84,6 +84,10 @@ uv run ciel loop resume     # reanuda loop tras reinicio (Fase 6, requiere --db)
 uv run ciel rbac list-roles # roles y permisos RBAC (Fase 7, offline)
 uv run ciel rbac check      # verifica permiso de un subject (Fase 7)
 uv run ciel cost status     # gasto/presupuesto por tenant (Fase 7, offline)
+uv run ciel observe         # verifica exporter OTel (Fase 8, offline-safe)
+uv run ciel serve --otel otlp://collector:4317   # tracing OTLP (Fase 8)
+uv run ciel serve           # monta routers Teams/Discord/WebUI en /v1/messaging/{channel}/health
+uv run ciel chat --adapter fake   # demo canal con FakeAdapter (Fase 8, offline)
 ```
 
 ## Notas

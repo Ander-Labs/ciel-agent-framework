@@ -31,7 +31,8 @@ helm upgrade --install ciel deploy/helm/ciel \
 ```
 
 Por defecto el chart arranca **2 réplicas** con PDB (`minAvailable: 1`),
-HPA (2–10 réplicas, target CPU 70%) y anti-affinity por `kubernetes.io/hostname`.
+HPA (2–10 réplicas, target CPU 70%), `podAntiAffinity` por `kubernetes.io/hostname`
+y `topologySpreadConstraints` (maxSkew 1).
 
 ## Verificar salud
 
@@ -43,12 +44,34 @@ kubectl -n ciel port-forward svc/ciel 8080:8080 &
 curl -s localhost:8080/health
 ```
 
+## Canales de mensajería (adapters)
+
+Los adapters Teams/Discord/WebUI se montan en `ciel serve` vía routers en
+`ciel.gateway.messaging`. Tras el despliegue, sus health endpoints responden 200:
+
+```bash
+curl -s localhost:8080/v1/messaging/teams/health    # 200
+curl -s localhost:8080/v1/messaging/discord/health  # 200
+curl -s localhost:8080/v1/messaging/webui/health     # 200
+```
+
 ## Escalar número de réplicas base
 
 ```bash
 helm upgrade ciel deploy/helm/ciel --reuse-values --set replicaCount=3
 # o dejar que el HPA lo gestione (minReplicas/maxReplicas).
 ```
+
+## Observabilidad (OTel)
+
+Para enviar traces a un collector, arrancar el servidor con el flag `--otel`:
+
+```bash
+ciel serve --otel otlp://otel-collector:4317
+```
+
+Sin endpoint, el tracing es in-memory (offline-safe). Verificar con
+`ciel observe`.
 
 ## Notas de checkpoint compartido (HA)
 

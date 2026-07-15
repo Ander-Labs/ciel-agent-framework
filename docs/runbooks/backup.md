@@ -26,6 +26,9 @@ kubectl -n ciel cp "$POD:/tmp/audit.bak" /tmp/ciel-audit-$(date +%s).bak
 > Nota: si no hay `sqlite3` en la imagen, copiar el archivo `.db` directamente con
 > `kubectl cp` y validarlo con `uv run python -c "import sqlite3; ..."`.
 
+El tablero kanban se respalda igual (misma base `MemoryStore`); apuntar al archivo
+de board si está en ruta distinta.
+
 ## Restore
 
 ```bash

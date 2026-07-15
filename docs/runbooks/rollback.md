@@ -34,7 +34,7 @@ helm -n ciel rollback ciel <revision> --wait --timeout 300s
 Si solo la imagen está rota, fijar un tag conocido:
 ```bash
 helm upgrade ciel deploy/helm/ciel --reuse-values \
-  --set image.tag=0.1.0
+  --set image.tag=0.2.0
 ```
 
 ## Rollback de la aplicación (código/CLI local)
