@@ -9,7 +9,7 @@ edit_uri: edit/master/docs/
 # desarrollo, prompts de orquestación, notas de charteo/CI) para que no
 # aparezca en el sitio público ni genere warnings con `mkdocs build --strict`.
 # Patrón regex único (mkdocs usa re.search contra la ruta relativa).
-exclude_docs: 'dev[\\/].*|Prompt\.md|CHARTER\.md|CI\.md|UPGRADE_v0\.3\.0\.md|ROADMAP\.md'
+exclude_docs: 'dev/.*|Prompt\.md|CHARTER\.md|CI\.md|UPGRADE_v0\.3\.0\.md|ROADMAP\.md'
 
 theme:
   name: material
@@ -65,7 +65,7 @@ markdown_extensions:
       permalink_leading: true
 
 nav:
-  - Inicio: guide/index.md
+  - Inicio: index.md
   - Guía:
       - Inicio rápido: guide/quickstart.md
       - Conceptos: guide/concepts.md
