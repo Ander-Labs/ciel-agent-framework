@@ -1,5 +1,8 @@
 # Ciel Agent Framework
 
+[![Documentación](https://img.shields.io/badge/docs-MkDocs%20Material-teal?style=flat&logo=mkdocs&logoColor=white)](https://ander-labs.github.io/ciel-agent-framework/)
+[Documentación oficial](https://ander-labs.github.io/ciel-agent-framework/)
+
 Enterprise-grade framework to build model-agnostic, deploy-agnostic autonomous agents and multi-agent systems with harness-first principles.
 
 ## Packages
@@ -185,3 +188,13 @@ Ciel está diseñado para extenderse sin tocar el core:
 
 - Core framework: **AGPL-3.0-or-later**
 - Commercial dual license available for regulated deployments.
+
+## Documentación
+
+La documentación oficial (MkDocs Material) se publica en GitHub Pages:
+
+- **Sitio completo**: https://ander-labs.github.io/ciel-agent-framework/
+- **Guía rápida**: https://ander-labs.github.io/ciel-agent-framework/quickstart/
+- **Conceptos**: https://ander-labs.github.io/ciel-agent-framework/concepts/
+- **Runbooks**: https://github.com/Ander-Labs/ciel-agent-framework/tree/master/docs/runbooks
+- **Referencia API**: https://ander-labs.github.io/ciel-agent-framework/

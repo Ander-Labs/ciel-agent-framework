@@ -46,3 +46,6 @@ deploy/example-enterprise/.hermes-tmp.*
 .vscode/
 .idea/
 *.swp
+
+# MkDocs build output
+site/

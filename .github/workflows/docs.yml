@@ -1,0 +1,62 @@
+name: docs
+
+# Build the MkDocs (Material) site and publish it to the `gh-pages` branch,
+# which is served by GitHub Pages.
+#
+# Triggers:
+#   - push to the default branch `master` (only — NOT on tags, so it never
+#     collides with the Release workflow that publishes to PyPI on `v*` tags)
+#   - manual `workflow_dispatch`
+#
+# Prerequisites (repo settings):
+#   Settings > Pages > Build and deployment > Source = "Deploy from a branch",
+#   Branch = `gh-pages` / `/root`. This workflow assumes that is already enabled.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# `contents: write` is required so peaceiris/actions-gh-pages can push the
+# built site to the `gh-pages` branch using the automatic GITHUB_TOKEN.
+permissions:
+  contents: write
+
+# One docs build at a time per ref; cancel superseded pushes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: build & deploy docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python 3.11
+        run: uv python install 3.11
+
+      - name: Install project (docs extra)
+        run: uv sync --extra docs
+
+      - name: Build site
+        run: uv run mkdocs build --strict
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          publish_branch: gh-pages
+          force_orphan: true
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
+          commit_message: "docs: deploy ${{ github.sha }}"

@@ -93,5 +93,5 @@ Permitir que un mismo despliegue sirva a mas de un tenant sin fugas de datos, cr
 ## Documentacion esperada
 
 - `docs/design/multi_tenancy.md`: este documento.
-- `docs/dev/TODO.md`: items pendientes y decisiones.
+- `docs/dev/PENDIENTES.md`: items pendientes y decisiones.
 - `docs/ROADMAP.md`: criterios por fase.

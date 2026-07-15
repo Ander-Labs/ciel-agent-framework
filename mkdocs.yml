@@ -1,34 +1,98 @@
-site_name: Ciel Agent Framework — Guía
-site_description: Guía para desarrolladores del framework Ciel (mana-ciel)
+site_name: Ciel Agent Framework — Documentación oficial
+site_description: Documentación oficial del framework Ciel (mana-ciel) — guía, arquitectura, runbooks y referencia de API.
+site_url: https://ander-labs.github.io/ciel-agent-framework/
+repo_url: https://github.com/Ander-Labs/ciel-agent-framework
+repo_name: Ander-Labs/ciel-agent-framework
+edit_uri: edit/master/docs/
+
+# Excluir del build la documentación INTERNA de ingeniería (diario de
+# desarrollo, prompts de orquestación, notas de charteo/CI) para que no
+# aparezca en el sitio público ni genere warnings con `mkdocs build --strict`.
+# Patrón regex único (mkdocs usa re.search contra la ruta relativa).
+exclude_docs: 'dev[\\/].*|Prompt\.md|CHARTER\.md|CI\.md|UPGRADE_v0\.3\.0\.md|ROADMAP\.md'
+
 theme:
   name: material
+  language: es
   features:
     - navigation.sections
+    - navigation.top
     - content.code.copy
+    - search.suggest
+    - search.highlight
   palette:
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: teal
+      accent: teal
       toggle:
         icon: material/weather-night
         name: Modo claro
     - media: "(prefers-color-scheme: light)"
       scheme: default
       primary: teal
+      accent: teal
       toggle:
         icon: material/weather-sunny
         name: Modo oscuro
-nav:
-  - Inicio: index.md
-  - Quickstart: quickstart.md
-  - Conceptos: concepts.md
-  - Providers: providers.md
-  - Tools: tools.md
-  - Plugins: plugins.md
-  - Tutorial plugin: tutorial_plugin.md
-  - Deploy: deploy.md
-  - Configuración: configuration.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: true
+            docstring_style: google
+            show_root_heading: true
+            show_root_toc_entry: false
+            show_bases: true
+            show_signature_annotations: true
+            setup_commands:
+              - "import sys; sys.path.append('src')"
+              - "import ciel"
+
 markdown_extensions:
   - admonition
-  - pymdownx.highlight
+  - pymdownx.highlight:
+      anchor_linenums: true
   - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - toc:
+      permalink: true
+      permalink_leading: true
+
+nav:
+  - Inicio: guide/index.md
+  - Guía:
+      - Inicio rápido: guide/quickstart.md
+      - Conceptos: guide/concepts.md
+      - Providers: guide/providers.md
+      - Tools: guide/tools.md
+      - Plugins: guide/plugins.md
+      - Tutorial de plugin: guide/tutorial_plugin.md
+      - Despliegue: guide/deploy.md
+      - Configuración: guide/configuration.md
+  - Arquitectura:
+      - Multi-tenancy: design/multi_tenancy.md
+  - Runbooks (ops):
+      - Despliegue: runbooks/deploy.md
+      - Incidentes: runbooks/incident.md
+      - Rollback: runbooks/rollback.md
+      - Backup: runbooks/backup.md
+      - HPA (autoescalado): runbooks/hpa.md
+  - Roadmap: roadmap.md
+  - Upgrade: upgrade.md
+  - Referencia API:
+      - Índice: api-reference/index.md
+      - CLI: api-reference/cli.md
+      - Observability: api-reference/observability.md
+      - Adapters: api-reference/adapters.md
+      - Gateway: api-reference/gateway.md
+      - Providers: api-reference/providers.md
+      - Runtime: api-reference/runtime.md
+      - Security: api-reference/security.md
+      - Orchestration: api-reference/orchestration.md
+  - SDK: sdk/README.md

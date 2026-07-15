@@ -1,3 +1,6 @@
+> [!WARNING]
+> Documento de orquestación INTERNA del agente de desarrollo. No es documentación de uso del producto.
+
 # Prompt de continuación — Ciel Agent Framework
 
 Este archivo es el contexto de arranque para la siguiente sesión. Sustituye
