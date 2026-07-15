@@ -49,3 +49,15 @@ deploy/example-enterprise/.hermes-tmp.*
 
 # MkDocs build output
 site/
+
+# Internal / engineering docs (do NOT publish to GitHub)
+# Diario de desarrollo, prompts de orquestación, notas de charteo/CI,
+# roadmap interno, TASKS y propuestas de usuario.
+docs/Prompt.md
+docs/CHARTER.md
+docs/CI.md
+docs/roadmap.md
+docs/UPGRADE_*.md
+docs/faltante-funcion.md
+docs/dev/
+TASKS.md

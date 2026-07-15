@@ -38,6 +38,28 @@ ciel --help
 
 ## Quick start
 
+Con la API de alto nivel, un agente son ~15 líneas:
+
+```python
+import ciel
+
+@ciel.tool
+def add(a: int, b: int) -> int:
+    "Suma dos enteros."
+    return a + b
+
+from ciel.providers import OpenAICompatibleProvider
+provider = OpenAICompatibleProvider(base_url="https://api.openai.com/v1",
+                                    api_key="sk-...", default_model="gpt-4o-mini")
+
+agent = ciel.Agent(provider=provider, tools=[add], model="gpt-4o-mini")
+resp = agent.run("¿Cuánto es 2 + 3?", tenant_id="acme")
+print(resp.text)
+```
+
+¿Sin API key? El [Inicio rápido](https://ander-labs.github.io/ciel-agent-framework/guide/quickstart/)
+trae un `DummyProvider` 100% offline. También:
+
 ```bash
 pip install mana-ciel
 ciel init my-agent          # scaffold a runnable project (offline-safe)
@@ -176,6 +198,28 @@ Entregado en esta sesión:
 - **Bug raíz corregido**: `ciel.runtime.ToolProvider.execute` usa ahora la firma oficial de callable — `callable_(arguments, *, tool_call_id, tenant_id) -> ToolResult | dict | Any` — alineando tools builtin, de plugin y de usuario.
 
 Verificación actual: `uv run pytest tests/` → 230 passed, 2 skipped (cifra global de la suite tras Fase 9).
+
+### Fase 10 — Developer Experience & API pública: ✅ Cerrada
+API de alto nivel que reduce el "hola mundo" de ~141 líneas de cableado a ~15,
+sin romper el low-level (se construye como fachada encima del runtime).
+
+Entregado en esta sesión:
+- **`@ciel.tool`**: decorador que infiere el JSON schema desde type hints +
+  docstring (Pydantic v2); soporta `List`/`Dict`/`Optional`/`Union` y funciones
+  `async`. La función decorada sigue siendo llamable como Python normal.
+- **`ciel.Agent`**: entrada de alto nivel (`run` sync / `arun` async) que cablea
+  provider + registro de tools + dispatcher + runtime. Conserva multi-tenancy.
+- **`ciel.Context`**: inyección de dependencias (tenant/session/user) a las tools
+  que lo declaren; se excluye del schema que ve el modelo.
+- **`ciel.AgentResponse`**: resultado ergonómico (`.text`, `.tool_results`,
+  `.tool_calls`, `.messages`, `.raw`).
+- **Docs públicas** reescritas para la API nueva + cookbook (5 recetas) sobre
+  Material for MkDocs con navegación por pestañas y UI mejorada.
+- **Ejemplos**: `examples/quickstart_agent.py` (API nueva, ~30 líneas) +
+  `examples/lowlevel_agent.py` (cableado manual para usuarios avanzados).
+
+Verificación actual: `uv run pytest tests/` → 242 passed, 2 skipped;
+`uv run mkdocs build --strict` → exit 0.
 
 ## Extending Ciel
 

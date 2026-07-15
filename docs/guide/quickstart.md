@@ -1,102 +1,123 @@
-# Quickstart — tu primer agente en <5 min (sin red)
+# Inicio rápido — tu primer agente en ~15 líneas
 
-Este ejemplo corre **100% offline**: no necesitas API keys ni conexión. Usa un
-provider mock y una tool propia, y ejecuta un loop de agente con
-`DefaultAgentRuntime`.
+Ciel expone una **API de alto nivel** (`@ciel.tool`, `ciel.Agent`,
+`ciel.Context`, `AgentResponse`) que cablea por ti el runtime, el registro de
+tools y el dispatcher. Multi-tenancy y trazabilidad se conservan: el
+`tenant_id` fluye desde `Agent.run()` hasta cada tool.
 
-## Opción A — programático (copiable y ejecutable)
+## Instalación
 
-Guarda como `primer_agente.py` y corre `uv run python primer_agente.py`:
+```bash
+pip install mana-ciel   # el import y el CLI se mantienen como `ciel`
+```
+
+## Opción A — 100% offline (copiable y ejecutable)
+
+No necesitas API keys ni red: usamos un `DummyProvider` determinista que decide
+llamar a la tool `add`. Guárdalo como `primer_agente.py` y ejecútalo con
+`uv run python primer_agente.py`.
 
 ```python
-from __future__ import annotations
-import asyncio
-from ciel.providers import ChatProvider
-from ciel.runtime import (
-    ChatChoice, ChatMessage, ChatRequest, ChatResponse,
-    DefaultAgentRuntime, DefaultToolDispatcher, ToolProvider,
-)
-from ciel.runtime.tools import Tool, ToolRegistry, ToolSpec, ToolResult
+import ciel
+from ciel.providers import ChatProvider, ModelInfo
+from ciel.runtime import ChatChoice, ChatMessage, ChatResponse
 
 
-# 1) Provider offline (mock): devuelve las tool_calls que le indiquemos y luego un texto.
-class MockProvider(ChatProvider):
-    provider_name = "mock"
+@ciel.tool
+def add(a: int, b: int) -> int:
+    "Suma dos enteros."
+    return a + b
 
-    async def complete(self, request: ChatRequest) -> ChatResponse:
-        # Si el usuario pide "suma", devolvemos una tool_call; si no, texto fijo.
-        last = request.messages[-1].content if request.messages else ""
-        if "suma" in last:
-            tool_calls = [{
-                "id": "call_1", "name": "sumar",
-                "arguments": {"a": 2, "b": 3},
-            }]
-            message = ChatMessage(role="assistant", content="", tool_calls=tool_calls)
-            return ChatResponse(choice=ChatChoice(message=message, finish_reason="tool_calls"), metadata={})
+
+class DummyProvider(ChatProvider):
+    """Provider offline: siempre pide ejecutar add(2, 3)."""
+    provider_name = "dummy"
+
+    async def complete(self, request):
+        tc = [{"id": "c1", "name": "add", "arguments": {"a": 2, "b": 3}}]
+        msg = ChatMessage(role="assistant", content="", tool_calls=tc)
         return ChatResponse(
-            choice=ChatChoice(message=ChatMessage(role="assistant", content="Hola, soy tu agente offline."), finish_reason="stop"),
-            metadata={},
+            choice=ChatChoice(message=msg, finish_reason="tool_calls"),
+            metadata={"tool_calls": tc},
         )
 
     async def stream(self, request):
         return [await self.complete(request)]
 
     async def models(self):
-        return []
+        return (ModelInfo(id="dummy", provider="dummy"),)
 
 
-# 2) Tool propia
-def sumar(arguments, *, tool_call_id="", tenant_id=None) -> ToolResult:
-    a, b = arguments.get("a", 0), arguments.get("b", 0)
-    return ToolResult(id=tool_call_id, name="sumar", output={"result": a + b})
+agent = ciel.Agent(provider=DummyProvider(), tools=[add], toolset="demo")
+resp = agent.run("Suma 2 + 3", tenant_id="acme")
 
-
-# 3) Ensamblar runtime
-registry = ToolRegistry(default_toolset="default")
-registry.register_tool("default", Tool(
-    spec=ToolSpec(name="sumar", description="Suma dos números",
-                  parameters={"a": {"type": "integer"}, "b": {"type": "integer"}}),
-    callable_=sumar,
-))
-dispatcher = DefaultToolDispatcher(
-    provider=ToolProvider(registry=registry, require_tenant_on_execution=False),
-    default_toolset="default",
-)
-runtime = DefaultAgentRuntime(provider=MockProvider(), dispatcher=dispatcher)
-
-if __name__ == "__main__":
-    result = asyncio.run(runtime.run_agent_loop(
-        request=ChatRequest(messages=[ChatMessage(role="user", content="haz la suma")]),
-        tenant_id="default",
-    ))
-    print("Respuesta:", result.response.choice.message.content)
+print("finish_reason:", resp.finish_reason)
+for r in resp.tool_results:
+    print("tool:", r.name, "->", r.output)   # add -> 5
 ```
 
 Salida esperada:
 
 ```
-Respuesta: Hola, soy tu agente offline.
+finish_reason: tool_calls
+tool: add -> 5
 ```
 
-(El agente ejecutó `sumar(2,3)` vía el dispatcher y luego el mock cerró el loop
-con el mensaje final.)
-
-## Opción B — script de ejemplo del repo
-
-El repo incluye un ejemplo minimalista ya verificado offline:
+El mismo ejemplo, ya verificado, vive en el repo:
 
 ```bash
 uv run examples/quickstart_agent.py
 ```
 
-## Siguiente paso
+## Opción B — con un provider real
 
-Sustituye `MockProvider` por un provider real:
+Sustituye el `DummyProvider` por uno real. El resto del código no cambia.
+
+=== "OpenAI-compatible"
+
+    ```python
+    import ciel
+    from ciel.providers import OpenAICompatibleProvider
+
+    @ciel.tool
+    def add(a: int, b: int) -> int:
+        "Suma dos enteros."
+        return a + b
+
+    provider = OpenAICompatibleProvider(
+        base_url="https://api.openai.com/v1",
+        api_key="sk-...",
+        default_model="gpt-4o-mini",
+    )
+    agent = ciel.Agent(provider=provider, tools=[add], model="gpt-4o-mini")
+    resp = agent.run("¿Cuánto es 2 + 3?", tenant_id="acme")
+    print(resp.text)
+    ```
+
+=== "Anthropic"
+
+    ```python
+    import ciel
+    from ciel.providers import AnthropicProvider
+
+    provider = AnthropicProvider(api_key="sk-ant-...",
+                                 default_model="claude-3-5-haiku-20241022")
+    agent = ciel.Agent(provider=provider, tools=[], model="claude-3-5-haiku-20241022")
+    print(agent.run("Hola").text)
+    ```
+
+## `async` / `await`
+
+Dentro de código asíncrono usa `arun` (no `run`, que lanza `RuntimeError` si hay
+un event loop activo):
 
 ```python
-from ciel.providers import OpenAICompatibleProvider
-provider = OpenAICompatibleProvider(base_url="https://api.openai.com/v1",
-                                    api_key="sk-...", default_model="gpt-4o-mini")
+resp = await agent.arun("Suma 2 + 3", tenant_id="acme")
+print(resp.text)
 ```
 
-Ver [Providers](providers.md).
+## Siguiente paso
+
+- [Conceptos](concepts.md) — `Agent`, `Tool`, `Context`, `AgentResponse`.
+- [Tools](tools.md) — inferencia de esquema, inyección de `Context`, tools `async`.
+- [Providers](providers.md) — providers incluidos y cómo crear el tuyo.

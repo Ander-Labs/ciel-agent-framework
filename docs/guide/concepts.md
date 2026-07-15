@@ -26,12 +26,34 @@ muestra el flujo básico:
          └───────────┘
 ```
 
-## Agent
+## Capa de alto nivel (recomendada)
 
-Un agente es la unidad que resuelve una tarea. En Ciel no necesitas una clase
-`Agent` rígida: ensamblas un `Runtime` con un `Provider` (el LLM) y un
-`Dispatcher` (las tools). El loop conversacional vive en
-`DefaultAgentRuntime.run_agent_loop()`.
+Para el caso común usas cuatro piezas de la API pública (`import ciel`):
+
+- **`ciel.Agent`** — entrada de alto nivel. Encapsula provider + registro de
+  tools + dispatcher + runtime. Métodos `run()` (sync) y `arun()` (async).
+- **`@ciel.tool`** — convierte una función Python en tool, infiriendo el
+  esquema desde type hints + docstring. Ver [Tools](tools.md).
+- **`ciel.Context`** — objeto de inyección de dependencias (tenant/session/user)
+  disponible dentro de las tools que lo declaren.
+- **`ciel.AgentResponse`** — resultado ergonómico: `.text`, `.tool_results`,
+  `.tool_calls`, `.messages`, `.raw`.
+
+```python
+import ciel
+
+@ciel.tool
+def add(a: int, b: int) -> int:
+    "Suma dos enteros."
+    return a + b
+
+agent = ciel.Agent(provider=mi_provider, tools=[add])
+resp = agent.run("Suma 2 + 3", tenant_id="acme")
+print(resp.text)
+```
+
+Por debajo, esta capa se apoya en las primitivas siguientes, que puedes usar
+directamente cuando necesites control fino.
 
 ## Runtime
 

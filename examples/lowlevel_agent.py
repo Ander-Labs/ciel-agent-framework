@@ -1,0 +1,145 @@
+"""Low-level agent: cableado manual del runtime de Ciel (sin la capa @ciel.tool).
+
+Este ejemplo está pensado para usuarios avanzados que necesitan control total
+sobre el runtime. Muestra el patrón de cableado manual con la API de core:
+
+  * un proveedor dummy (subclase de ``ciel.providers.ChatProvider``) que
+    "decide" llamar a una tool de forma determinista,
+  * una tool propia registrada con su callable en un ``ToolRegistry``,
+  * el ``ToolProvider`` + ``DefaultToolDispatcher`` + ``DefaultAgentRuntime``
+    cableados a mano,
+  * un ``run_agent_loop`` que ejecuta la tool y devuelve el resultado.
+
+Para el camino rápido con la API de alto nivel, mira ``examples/quickstart_agent.py``.
+
+Ejecuta:
+    uv run examples/lowlevel_agent.py
+
+No requiere red ni API keys: el proveedor es un stub determinista.
+"""
+
+from __future__ import annotations
+
+import asyncio
+from typing import Any, Dict
+
+from ciel.providers import ChatProvider, ModelInfo
+from ciel.runtime import (
+    ChatRequest,
+    ChatResponse,
+    ChatChoice,
+    ChatMessage,
+    DefaultAgentRuntime,
+    DefaultToolDispatcher,
+    ToolProvider,
+    ToolRegistry,
+    Tool,
+    ToolSpec,
+)
+from ciel.runtime.tools import ToolResult
+
+
+# ---------------------------------------------------------------------------
+# 1. Proveedor dummy (offline): devuelve un tool_call determinista.
+# ---------------------------------------------------------------------------
+class DummyProvider(ChatProvider):
+    provider_name = "dummy"
+
+    async def complete(self, request: ChatRequest) -> ChatResponse:
+        # El proveedor "simula" que quiere sumar 2 + 3 usando la tool "add".
+        tool_calls = [
+            {
+                "id": "call_1",
+                "name": "add",
+                "arguments": {"a": 2, "b": 3},
+            }
+        ]
+        message = ChatMessage(
+            role="assistant",
+            content="",
+            tool_calls=tool_calls,
+        )
+        return ChatResponse(
+            choice=ChatChoice(message=message, finish_reason="tool_calls"),
+            metadata={"tool_calls": tool_calls},
+        )
+
+    async def stream(self, request: ChatRequest):
+        return [await self.complete(request)]
+
+    async def models(self) -> tuple[ModelInfo, ...]:
+        return (ModelInfo(id="dummy", provider=self.provider_name),)
+
+
+# ---------------------------------------------------------------------------
+# 2. Tool propia: una suma simple. El callable recibe (arguments, *, tool_call_id, tenant_id).
+# ---------------------------------------------------------------------------
+def add(arguments, *, tool_call_id="", tenant_id=None) -> ToolResult:
+    a = arguments.get("a", 0)
+    b = arguments.get("b", 0)
+    return ToolResult(id=tool_call_id, name="add", output={"result": a + b})
+
+
+# ---------------------------------------------------------------------------
+# 3. Cableado manual del runtime (patrón de bajo nivel).
+# ---------------------------------------------------------------------------
+def build_runtime() -> DefaultAgentRuntime:
+    # Registro de tools en un ToolRegistry (con su callable vía Tool).
+    registry = ToolRegistry(default_toolset="demo")
+    registry.register_tool(
+        "demo",
+        Tool(
+            spec=ToolSpec(
+                name="add",
+                description="Suma dos enteros.",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "a": {"type": "integer"},
+                        "b": {"type": "integer"},
+                    },
+                    "required": ["a", "b"],
+                },
+            ),
+            callable_=add,
+        ),
+    )
+
+    # ToolProvider del core (require_tenant_on_execution=False para el demo).
+    provider = ToolProvider(registry=registry, require_tenant_on_execution=False)
+    dispatcher = DefaultToolDispatcher(provider=provider, default_toolset="demo")
+
+    return DefaultAgentRuntime(
+        provider=DummyProvider(),
+        dispatcher=dispatcher,
+        agent="lowlevel-agent",
+    )
+
+
+async def main() -> int:
+    runtime = build_runtime()
+    request = ChatRequest(
+        messages=(ChatMessage(role="user", content="Suma 2 + 3"),),
+        tools=(),
+    )
+
+    print("[lowlevel] ejecutando run_agent_loop (offline)...")
+    result = await runtime.run_agent_loop(request=request, toolset="demo", tenant_id="default")
+
+    print(f"  finish_reason = {result.response.choice.finish_reason}")
+    for turn in result.loop_results:
+        for tool_result in turn.tool_results:
+            print(f"  tool={tool_result.name} output={tool_result.output}")
+
+    # Verificación simple para que el script salga con código 0 si todo bien.
+    ok = any(
+        tr.output is not None and tr.output.get("result") == 5
+        for turn in result.loop_results
+        for tr in turn.tool_results
+    )
+    print(f"[lowlevel] OK={ok}")
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(asyncio.run(main()))

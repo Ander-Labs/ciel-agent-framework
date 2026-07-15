@@ -1,5 +1,5 @@
 site_name: Ciel Agent Framework — Documentación oficial
-site_description: Documentación oficial del framework Ciel (mana-ciel) — guía, arquitectura, runbooks y referencia de API.
+site_description: Framework enterprise de agentes autónomos, multi-tenant y model/deploy-agnostic. Documentación oficial de mana-ciel (import ciel).
 site_url: https://ander-labs.github.io/ciel-agent-framework/
 repo_url: https://github.com/Ander-Labs/ciel-agent-framework
 repo_name: Ander-Labs/ciel-agent-framework
@@ -9,17 +9,26 @@ edit_uri: edit/master/docs/
 # desarrollo, prompts de orquestación, notas de charteo/CI) para que no
 # aparezca en el sitio público ni genere warnings con `mkdocs build --strict`.
 # Patrón regex único (mkdocs usa re.search contra la ruta relativa).
-exclude_docs: 'dev/.*|Prompt\.md|CHARTER\.md|CI\.md|UPGRADE_v0\.3\.0\.md|ROADMAP\.md'
+exclude_docs: 'dev/.*|Prompt\.md|CHARTER\.md|CI\.md|UPGRADE_v0\.3\.0\.md|roadmap\.md|UPGRADE.*\.md'
 
 theme:
   name: material
   language: es
   features:
+    - navigation.tabs
     - navigation.sections
+    - navigation.instant
+    - navigation.tracking
     - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - toc.integrate
     - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
     - search.suggest
     - search.highlight
+    - search.share
   palette:
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
@@ -27,14 +36,17 @@ theme:
       accent: teal
       toggle:
         icon: material/weather-night
-        name: Modo claro
+        name: Cambiar a modo claro
     - media: "(prefers-color-scheme: light)"
       scheme: default
       primary: teal
       accent: teal
       toggle:
         icon: material/weather-sunny
-        name: Modo oscuro
+        name: Cambiar a modo oscuro
+
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search
@@ -60,21 +72,36 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.inlinehilite
   - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
   - toc:
       permalink: true
       permalink_leading: true
+      toc_depth: 3
 
 nav:
   - Inicio: index.md
   - Guía:
       - Inicio rápido: guide/quickstart.md
       - Conceptos: guide/concepts.md
-      - Providers: guide/providers.md
       - Tools: guide/tools.md
+      - Providers: guide/providers.md
       - Plugins: guide/plugins.md
       - Tutorial de plugin: guide/tutorial_plugin.md
       - Despliegue: guide/deploy.md
       - Configuración: guide/configuration.md
+  - Cookbook:
+      - Índice: cookbook/index.md
+      - Múltiples tools: cookbook/multi_tool.md
+      - Multitenancy con Context: cookbook/context_tenant.md
+      - Tools asíncronas: cookbook/async_tool.md
+      - Instrucciones de sistema: cookbook/system_instructions.md
+      - Provider real: cookbook/real_provider.md
   - Arquitectura:
       - Multi-tenancy: design/multi_tenancy.md
   - Runbooks (ops):
@@ -83,7 +110,6 @@ nav:
       - Rollback: runbooks/rollback.md
       - Backup: runbooks/backup.md
       - HPA (autoescalado): runbooks/hpa.md
-  - Roadmap: roadmap.md
   - Upgrade: upgrade.md
   - Referencia API:
       - Índice: api-reference/index.md

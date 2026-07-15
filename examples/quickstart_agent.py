@@ -1,12 +1,13 @@
-"""Quickstart: tu primer agente Ciel funcionando 100% OFFLINE (sin red/API keys).
+"""Quickstart: tu primer agente Ciel con la API de alto nivel (@ciel.tool + ciel.Agent).
 
-Demuestra el camino mínimo programático con el runtime real:
+Demuestra el camino mínimo con la nueva capa Developer Experience:
 
-  * un proveedor dummy (subclase de ``ciel.providers.ChatProvider``) que
-    "decide" llamar a una tool,
-  * una tool propia registrada con su callable en un ``ToolRegistry``,
-  * el dispatcher y el ``DefaultAgentRuntime`` cableados,
-  * un ``run_agent_loop`` que ejecuta la tool y devuelve el resultado.
+  * un proveedor dummy offline (subclase de ``ciel.providers.ChatProvider``)
+    que "decide" llamar a una tool de forma determinista,
+  * una tool propia definida con el decorador ``@ciel.tool`` (el schema se
+    infiere de los type hints + el docstring),
+  * un ``ciel.Agent`` que cablea provider + tools + runtime por ti,
+  * ``agent.run(...)`` síncrono que devuelve una ``ciel.AgentResponse``.
 
 Ejecuta:
     uv run examples/quickstart_agent.py
@@ -16,33 +17,32 @@ No requiere red ni API keys: el proveedor es un stub determinista.
 
 from __future__ import annotations
 
-import asyncio
-from typing import Any, Dict
-
+import ciel
 from ciel.providers import ChatProvider, ModelInfo
 from ciel.runtime import (
-    ChatRequest,
-    ChatResponse,
     ChatChoice,
     ChatMessage,
-    DefaultAgentRuntime,
-    DefaultToolDispatcher,
-    ToolProvider,
-    ToolRegistry,
-    Tool,
-    ToolSpec,
+    ChatRequest,
+    ChatResponse,
 )
-from ciel.runtime.tools import ToolResult
 
 
 # ---------------------------------------------------------------------------
-# 1. Proveedor dummy (offline): devuelve un tool_call determinista.
+# 1. Tool propia con la nueva API de alto nivel: @ciel.tool infiere el schema.
+# ---------------------------------------------------------------------------
+@ciel.tool
+def add(a: int, b: int) -> int:
+    """Suma dos enteros y devuelve el resultado."""
+    return a + b
+
+
+# ---------------------------------------------------------------------------
+# 2. Proveedor dummy (offline): pide de forma determinista la tool "add".
 # ---------------------------------------------------------------------------
 class DummyProvider(ChatProvider):
     provider_name = "dummy"
 
     async def complete(self, request: ChatRequest) -> ChatResponse:
-        # El proveedor "simula" que quiere sumar 2 + 3 usando la tool "add".
         tool_calls = [
             {
                 "id": "call_1",
@@ -68,74 +68,23 @@ class DummyProvider(ChatProvider):
 
 
 # ---------------------------------------------------------------------------
-# 2. Tool propia: una suma simple. El callable recibe (arguments, *, tool_call_id, tenant_id).
+# 3. Agente de alto nivel: ciel.Agent cablea todo por ti.
 # ---------------------------------------------------------------------------
-def add(arguments, *, tool_call_id="", tenant_id=None) -> ToolResult:
-    a = arguments.get("a", 0)
-    b = arguments.get("b", 0)
-    return ToolResult(id=tool_call_id, name="add", output={"result": a + b})
+def main() -> int:
+    agent = ciel.Agent(provider=DummyProvider(), tools=[add], toolset="demo")
 
+    print("[quickstart] ejecutando agent.run (offline)...")
+    # tenant_id="default" es necesario: el runtime lo propaga a la auditoría.
+    resp = agent.run("Suma 2 + 3", tenant_id="default")
 
-# ---------------------------------------------------------------------------
-# 3. Cableado mínimo del runtime.
-# ---------------------------------------------------------------------------
-def build_runtime() -> DefaultAgentRuntime:
-    # Registro de tools en un ToolRegistry (con su callable vía Tool).
-    registry = ToolRegistry(default_toolset="demo")
-    registry.register_tool(
-        "demo",
-        Tool(
-            spec=ToolSpec(
-                name="add",
-                description="Suma dos enteros.",
-                parameters={
-                    "type": "object",
-                    "properties": {
-                        "a": {"type": "integer"},
-                        "b": {"type": "integer"},
-                    },
-                    "required": ["a", "b"],
-                },
-            ),
-            callable_=add,
-        ),
-    )
+    print(f"  finish_reason = {resp.finish_reason}")
+    for tr in resp.tool_results:
+        print(f"  tool={tr.name} output={tr.output}")
 
-    # ToolProvider del core (require_tenant_on_execution=False para el demo).
-    provider = ToolProvider(registry=registry, require_tenant_on_execution=False)
-    dispatcher = DefaultToolDispatcher(provider=provider, default_toolset="demo")
-
-    return DefaultAgentRuntime(
-        provider=DummyProvider(),
-        dispatcher=dispatcher,
-        agent="quickstart-agent",
-    )
-
-
-async def main() -> int:
-    runtime = build_runtime()
-    request = ChatRequest(
-        messages=(ChatMessage(role="user", content="Suma 2 + 3"),),
-        tools=(),
-    )
-
-    print("[quickstart] ejecutando run_agent_loop (offline)...")
-    result = await runtime.run_agent_loop(request=request, toolset="demo", tenant_id="default")
-
-    print(f"  finish_reason = {result.response.choice.finish_reason}")
-    for turn in result.loop_results:
-        for tool_result in turn.tool_results:
-            print(f"  tool={tool_result.name} output={tool_result.output}")
-
-    # Verificación simple para que el script salga con código 0 si todo bien.
-    ok = any(
-        tr.output is not None and tr.output.get("result") == 5
-        for turn in result.loop_results
-        for tr in turn.tool_results
-    )
+    ok = any(tr.output == 5 for tr in resp.tool_results)
     print(f"[quickstart] OK={ok}")
     return 0 if ok else 1
 
 
 if __name__ == "__main__":
-    raise SystemExit(asyncio.run(main()))
+    raise SystemExit(main())

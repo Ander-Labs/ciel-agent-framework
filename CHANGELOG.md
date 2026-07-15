@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 
 Dates use release date. Versions follow SemVer with initial pre-release `0.1.0`.
 
+## [0.4.0] — Fase 10 (Developer Experience & API pública) — 2026-07-15
+
+API de alto nivel construida como **fachada** sobre el runtime existente (sin
+cambios incompatibles en el low-level). Reduce el "hola mundo" de ~141 líneas de
+cableado a ~15.
+
+### Added
+- **`@ciel.tool`** (`ciel.api`): decorador que convierte una función Python en
+  tool, infiriendo el JSON schema desde type hints + docstring con **Pydantic
+  v2**. Soporta `List`/`Dict`/`Optional`/`Union` y funciones `async`. La función
+  decorada sigue siendo llamable como Python normal y expone `.as_tool`.
+- **`ciel.Agent`**: entrada de alto nivel. `run()` (sync) y `arun()` (async)
+  cablean provider + `ToolRegistry` + `DefaultToolDispatcher` +
+  `DefaultAgentRuntime`. Acepta `instructions`, `tenant_id`, `require_tenant`,
+  `approval_policy`, `temperature`, `max_tokens`. Conserva multi-tenancy.
+- **`ciel.Context`**: dataclass de inyección de dependencias
+  (`tenant_id`/`session_id`/`user`/`tool_call_id`/`metadata`). Un parámetro
+  anotado con `Context` se inyecta en runtime y se excluye del schema.
+- **`ciel.AgentResponse`**: wrapper ergonómico sobre `AgentRuntimeResult` con
+  `.text`, `.finish_reason`, `.tool_results`, `.tool_calls`, `.messages`, `.raw`.
+- **`ciel/__init__.py`** ahora exporta `Agent`, `AgentResponse`, `Context`,
+  `ToolFunction`, `tool` (además de `ApprovalPolicy`).
+- **Documentación pública** reescrita para la API nueva (`docs/index.md`,
+  `guide/quickstart.md`, `guide/tools.md`, `guide/concepts.md`) + **cookbook**
+  con 5 recetas (`docs/cookbook/`). Material for MkDocs con navegación por
+  pestañas, instant loading, tabbed content y CSS propio.
+- **Ejemplos**: `examples/quickstart_agent.py` reescrito a la API nueva;
+  `examples/lowlevel_agent.py` nuevo (cableado manual para usuarios avanzados).
+- **Tests**: `tests/test_fase10_api_test.py` (12 tests de la fachada).
+
+### Notes
+- Verificado: `uv run pytest tests/` → 242 passed, 2 skipped;
+  `uv run mkdocs build --strict` → exit 0; ambos ejemplos exit 0.
+- Sin publicar en PyPI en esta sesión (queda a criterio del mantenedor).
+
 ## [0.3.0] — Fase 9 (Extensibilidad: plugins, providers, tools, DX) — 2026-07-14
 
 **Publicado en PyPI**: `pip install mana-ciel==0.3.0` (distribución `mana-ciel`,
