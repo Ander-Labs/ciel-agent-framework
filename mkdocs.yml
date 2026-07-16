@@ -8,8 +8,14 @@ edit_uri: edit/master/docs/
 # Excluir del build la documentación INTERNA de ingeniería (diario de
 # desarrollo, prompts de orquestación, notas de charteo/CI) para que no
 # aparezca en el sitio público ni genere warnings con `mkdocs build --strict`.
-# Patrón regex único (mkdocs usa re.search contra la ruta relativa).
-exclude_docs: 'dev/.*|Prompt\\.md|CHARTER\\.md|CI\\.md|UPGRADE_v0\\.3\\.0\\.md|UPGRADE.*\\.md'
+# IMPORTANTE: mkdocs 1.6 usa sintaxis gitwildmatch (pathspec), NO regex.
+# Rutas relativas a docs/ (sin prefijo docs/).
+exclude_docs: |
+  dev/
+  Prompt.md
+  CHARTER.md
+  CI.md
+  UPGRADE*.md
 
 theme:
   name: material
