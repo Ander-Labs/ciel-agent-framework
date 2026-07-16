@@ -23,22 +23,35 @@ from ciel.api import Agent, AgentResponse, Context, ToolFunction, tool
 # Providers dummy OFFLINE (no red)
 # --------------------------------------------------------------------------- #
 class DummyToolCallProvider(ChatProvider):
-    """Devuelve tool_calls en metadata (forma nativa de ciel) y finish_reason
-    'tool_calls'. El runtime los despacha contra el registry del Agent."""
+    """Devuelve tool_calls en la primera llamada y luego texto (finish_reason
+    'stop'), simulando un modelo multi-turno que ejecuta la tool y responde.
+    Si se le pasa una lista de turnos, los consume en orden (multi-turno real)."""
 
     provider_name = "dummy-toolcall"
 
     def __init__(self, tool_calls):
-        self._tool_calls = tool_calls
+        # Acepta un solo set de tool_calls o una lista de turnos.
+        if isinstance(tool_calls, (list, tuple)) and tool_calls and isinstance(tool_calls[0], dict):
+            self._turns = [tool_calls]
+        else:
+            self._turns = list(tool_calls)
 
     async def complete(self, request: ChatRequest) -> ChatResponse:
-        tc = self._tool_calls
+        if self._turns:
+            tc = self._turns.pop(0)
+            return ChatResponse(
+                choice=ChatChoice(
+                    message=ChatMessage(role="assistant", content="", tool_calls=tc),
+                    finish_reason="tool_calls",
+                ),
+                metadata={"tool_calls": tc},
+            )
         return ChatResponse(
             choice=ChatChoice(
-                message=ChatMessage(role="assistant", content="", tool_calls=tc),
-                finish_reason="tool_calls",
+                message=ChatMessage(role="assistant", content="Listo."),
+                finish_reason="stop",
             ),
-            metadata={"tool_calls": tc},
+            metadata={},
         )
 
     async def stream(self, request: ChatRequest):

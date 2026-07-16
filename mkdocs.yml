@@ -109,6 +109,7 @@ nav:
       - Tools asíncronas: cookbook/async_tool.md
       - Instrucciones de sistema: cookbook/system_instructions.md
       - Provider real: cookbook/real_provider.md
+      - Auto-provider y multi-turno (Fase 11): cookbook/auto_provider_multiturn.md
   - Arquitectura:
       - Multi-tenancy: design/multi_tenancy.md
   - Runbooks (ops):

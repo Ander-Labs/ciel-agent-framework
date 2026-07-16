@@ -221,7 +221,31 @@ Entregado en esta sesión:
 Verificación actual: `uv run pytest tests/` → 242 passed, 2 skipped;
 `uv run mkdocs build --strict` → exit 0.
 
-## Extending Ciel
+### Fase 11 — Developer Experience II: ✅ Cerrada
+Continúa la fachada de alto nivel (sin cambios incompatibles en el low-level).
+
+Entregado en esta sesión:
+- **Auto-provider desde `model=`**: `ciel.Agent(model="gpt-4o-mini")` infiere el
+  provider y lee la API key del entorno según el prefijo del id
+  (`gpt-*`/`o1*`/`o3*` → OpenAI-compatible; `claude-*` → Anthropic;
+  `gemini-*`/`models/*` → Gemini). `provider=` explícito sigue ganando.
+- **Loop ReAct multi-turno** en `Agent.run()`/`arun()`: itera
+  `tool_calls → resultados` hasta `finish_reason == "stop"` o `max_turns`
+  (default 10). `AgentResponse.tool_results` / `.tool_calls` exponen los
+  resultados y llamadas de **todos** los turnos.
+- **`agent.astream(prompt)`**: async iterator sobre `runtime.stream_tokens()`
+  (streaming SSE real con OpenAI/Anthropic/Gemini; texto final como chunk para
+  providers offline).
+- **`@ciel.tool(timeout=, retries=, middleware=)`**: opciones de ejecución sin
+  romper la inferencia de schema ni el docstring.
+- **`require_tenant=True`** opcional en `Agent` para enforce de tenancy desde
+  día 1 (lanza `ciel.common.TenantRequired` con mensaje DX-amigable).
+- **Cookbook offline** Fase 11 (`docs/cookbook/auto_provider_multiturn.md`).
+
+Verificación actual: `uv run pytest tests/` → 254 passed, 2 skipped;
+`uv run mkdocs build --strict` → exit 0; `examples/quickstart_agent.py` y
+`examples/lowlevel_agent.py` → exit 0.
+
 
 Ciel está diseñado para extenderse sin tocar el core:
 

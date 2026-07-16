@@ -4,7 +4,52 @@ All notable changes to this project will be documented in this file.
 
 Dates use release date. Versions follow SemVer with initial pre-release `0.1.0`.
 
-## [0.4.0] — Fase 10 (Developer Experience & API pública) — 2026-07-15
+## [0.5.0] — Fase 11 (Developer Experience II) — 2026-07-16
+
+Continúa la fachada de alto nivel de la Fase 10. Mismo principio: **fachada
+sobre el runtime existente, sin cambios incompatibles en el low-level**. La
+suite completa pasa (254 passed / 2 skipped).
+
+### Added
+- **Auto-provider desde `model=`** (`ciel.providers.auto`): `ciel.Agent(model="gpt-4o-mini")`
+  infiere el provider y lee la API key del entorno según el prefijo del id
+  (`gpt-*`/`o1*`/`o3*` → OpenAI-compatible; `claude-*` → Anthropic;
+  `gemini-*`/`models/*` → Gemini). `provider=` explícito sigue teniendo
+  prioridad. Si no se pasa ni `model=` ni `provider=`, `run()`/`arun()` lanzan
+  `ValueError` (comportamiento de Fase 10 preservado).
+- **Loop ReAct multi-turno** en `Agent.run()`/`arun()`: el runtime itera
+  `tool_calls → resultados` hasta `finish_reason == "stop"` o `max_turns`
+  (por defecto 10). El single-step se conserva cuando `limit <= 1` o no hay
+  tools, por lo que la API low-level no cambia.
+- **`AgentResponse.tool_results`** ahora es una lista plana con los resultados
+  de **todos** los turnos; `AgentResponse.tool_calls` recolecta las llamadas de
+  todos los turnos. `finish_reason` reporta `"tool_calls"` cuando el agente
+  ejecutó tools en cualquier turno.
+- **`agent.astream(prompt)`**: async iterator sobre `runtime.stream_tokens()`
+  (streaming SSE real con OpenAI/Anthropic/Gemini; el texto final como un chunk
+  para providers offline). `max_turns` mayor a 1 produce el texto final en un
+  solo chunk tras el loop.
+- **`@ciel.tool(timeout=, retries=, middleware=)`**: opciones de ejecución
+  registradas en `ToolFunction.options`. `retries` se aplica en el callable del
+  runtime (reintenta en fallos transitorios); `middleware` envuelve el callable;
+  `timeout` queda disponible para el dispatcher. La inferencia de schema y el
+  docstring no se ven afectados.
+- **`require_tenant=True` por defecto opcional** en `Agent`: si se activa y no
+  hay tenant resoluble, `run()`/`arun()` lanzan `ciel.common.TenantRequired`
+  con un mensaje DX-amigable (enforce tenancy desde día 1).
+- **Cookbook offline** de Fase 11 (`docs/cookbook/auto_provider_multiturn.md`).
+
+### Changed
+- `DefaultAgentRuntime.run_agent_loop` (runtime) ahora es multi-turno (gated),
+  manteniendo backward-compatibilidad con el single-step histórico.
+
+### Tests
+- `tests/test_fase11_dx_test.py`: 12 tests nuevos (auto-provider por familia de
+  modelo, multi-turno con todos los tool_results, `max_turns`, `astream`,
+  `@tool` con opciones, `require_tenant`). Los 12 tests de fachada de Fase 10
+  siguen verdes.
+
+
 
 API de alto nivel construida como **fachada** sobre el runtime existente (sin
 cambios incompatibles en el low-level). Reduce el "hola mundo" de ~141 líneas de

@@ -135,9 +135,10 @@ print(resp.text)
 |---|---|
 | **PyPI** | `mana-ciel` (import `ciel`) |
 | **Compatibilidad** | Python >= 3.11 |
+| **Versión actual** | `0.5.0` (Fase 11) — `0.4.0` (Fase 10) publicada |
 | **Repositorio** | <https://github.com/Ander-Labs/ciel-agent-framework> |
 | **Releases** | <https://github.com/Ander-Labs/ciel-agent-framework/releases> |
-| **Licencia** | Consulta el repositorio |
+| **Licencia** | AGPL-3.0-or-later (dual comercial disponible) |
 
 ¿Vienes de una versión anterior? Revisa la
 [guía de upgrade](upgrade.md).

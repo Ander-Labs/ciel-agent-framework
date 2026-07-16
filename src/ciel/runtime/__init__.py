@@ -254,8 +254,22 @@ class DefaultAgentRuntime:
         toolset: Optional[str] = None,
         limit: int = 32,
     ) -> AgentRuntimeResult:
+        """Run the agentic tool loop (multi-turn ReAct when tools are present).
+
+        The loop issues up to ``limit`` model completions. After each completion
+        that requests tool calls, the requested tools are dispatched and their
+        results are appended as messages; the model is then called again. The
+        loop stops when (a) the model returns no tool calls (``finish_reason``
+        ``stop``), (b) ``limit`` turns are exhausted, or (c) there are no tools
+        registered in the request.
+
+        Backward compatibility: when ``limit <= 1`` or ``request.tools`` is
+        empty, exactly one completion is produced and no tool messages are
+        appended (the historical single-step behaviour). Every tool result from
+        every turn is preserved in ``loop_results`` so the facade can surface
+        the full ``tool_results`` list.
+        """
         session_id = request.extra.get("session_id") or str(uuid.uuid4())
-        context = AgentContext(agent=self.agent, session_id=session_id, tenant_id=tenant_id)
         await self._emit(
             AuditEvent(event="agent.loop.start", session_id=session_id, agent=self.agent, tenant_id=tenant_id),
             tenant_id=tenant_id,
@@ -263,39 +277,55 @@ class DefaultAgentRuntime:
 
         messages: List[ChatMessage] = list(request.messages)
         loop_results: List[ToolLoopResult] = []
-        turn_id = str(uuid.uuid4())
         finish_reason = "stop"
+        has_tools = bool(request.tools)
 
-        response = await self.provider.complete(
-            ChatRequest(
-                messages=tuple(messages),
-                tools=request.tools,
-                model=request.model,
-                temperature=request.temperature,
-                max_tokens=request.max_tokens,
-                extra={**request.extra, "session_id": session_id, "tenant_id": tenant_id},
+        # Multi-turn only when tools exist and the caller allows more than one step.
+        max_turns = max(1, limit) if (has_tools and limit > 1) else 1
+
+        final_response = None
+        for _ in range(max_turns):
+            response = await self.provider.complete(
+                ChatRequest(
+                    messages=tuple(messages),
+                    tools=request.tools,
+                    model=request.model,
+                    temperature=request.temperature,
+                    max_tokens=request.max_tokens,
+                    extra={**request.extra, "session_id": session_id, "tenant_id": tenant_id},
+                )
             )
-        )
-        messages.append(response.choice.message)
-        tool_calls = _extract_tool_calls(response)
+            final_response = response
+            messages.append(response.choice.message)
+            tool_calls = _extract_tool_calls(response)
 
-        if tool_calls:
+            if not tool_calls:
+                # Model is done; stop the loop.
+                finish_reason = response.choice.finish_reason or "stop"
+                break
+
             dispatch_results: List[ToolResult] = []
             for call in tool_calls:
                 call_arguments = call.get("arguments") or {}
                 decision = None
                 if self.approval_policy is not None and call.get("name") not in {None, ""}:
                     try:
-                        decision = self.approval_policy.evaluate(
-                            ApprovalRequest(
-                                request_id=call.get("id") or call.get("tool_call_id") or str(uuid.uuid4()),
-                                actor=tenant_id or "unknown",
-                                tool=call.get("name", ""),
-                                arguments=call_arguments,
-                                risk="medium",
-                                tenant=tenant_id,
+                        from ciel.security import ApprovalRequest, ApprovalPolicy
+                        if isinstance(self.approval_policy, type):
+                            policy = self.approval_policy()
+                        else:
+                            policy = self.approval_policy
+                        if hasattr(policy, "evaluate"):
+                            decision = policy.evaluate(
+                                ApprovalRequest(
+                                    request_id=call.get("id") or call.get("tool_call_id") or str(uuid.uuid4()),
+                                    actor=tenant_id or "unknown",
+                                    tool=call.get("name", ""),
+                                    arguments=call_arguments,
+                                    risk="medium",
+                                    tenant=tenant_id,
+                                )
                             )
-                        )
                     except Exception:
                         decision = None
                 if decision is not None and not decision.approved:
@@ -317,13 +347,14 @@ class DefaultAgentRuntime:
                         tool_call_id=call.get("id") or call.get("tool_call_id") or str(uuid.uuid4()),
                     )
                 )
+
             tool_turn = ToolLoopResult(
-                turn_id=turn_id,
+                turn_id=str(uuid.uuid4()),
                 messages=tuple(messages),
                 tool_results=tuple(dispatch_results),
                 finish_reason="tool_calls",
                 tenant_id=tenant_id,
-                metadata={"session_id": session_id, "toolset": toolset},
+                metadata={"session_id": session_id, "toolset": toolset, "turn": len(loop_results) + 1},
             )
             loop_results.append(tool_turn)
             finish_reason = "tool_calls"
@@ -333,11 +364,23 @@ class DefaultAgentRuntime:
                     session_id=session_id,
                     agent=self.agent,
                     tool_call_id=dispatch_results[0].id if dispatch_results else None,
-                    data={"tools": [r.name for r in dispatch_results]},
+                    data={"tools": [r.name for r in dispatch_results], "turn": len(loop_results)},
                     tenant_id=tenant_id,
                 ),
                 tenant_id=tenant_id,
             )
+
+            # Append tool results as tool messages so the next completion sees them.
+            for res in dispatch_results:
+                messages.append(
+                    ChatMessage(
+                        role="tool",
+                        content=str(res.output) if res.error is None else (res.error or ""),
+                        name=res.name,
+                        tool_call_id=res.id,
+                        metadata={"tenant_id": tenant_id, "tool_result": True, "error": res.error},
+                    )
+                )
 
         await self._emit(
             AuditEvent(event="agent.loop.end", session_id=session_id, agent=self.agent, tenant_id=tenant_id),
@@ -345,7 +388,7 @@ class DefaultAgentRuntime:
         )
 
         return AgentRuntimeResult(
-            response=response,
+            response=final_response,
             loop_results=tuple(loop_results),
             tenant_id=tenant_id,
             metadata={"session_id": session_id, "agent": self.agent},
