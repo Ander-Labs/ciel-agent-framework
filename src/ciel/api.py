@@ -564,3 +564,15 @@ class Agent:
 
 # Late import to avoid a cycle with ciel.common at module load time.
 from ciel.common import TenantRequired  # noqa: E402
+
+# Fase 12 Item 5 — Integración de skills con ciel.Agent (offline, additive).
+# Engancha @ciel.skill (decorator -> SkillLibrary global) y Agent(skills=[...])
+# / Agent.teach(...) sin reescribir la API existente del Agent.
+from ciel.runtime.skill_agent_integration import (  # noqa: E402
+    global_skill_library,
+    install_agent_skill_support,
+    skill,
+    teach,
+)
+install_agent_skill_support(Agent)
+__all__ = list(__all__) + ["skill", "teach", "global_skill_library"]

@@ -6,7 +6,7 @@ except PackageNotFoundError:  # pragma: no cover
     __version__ = "0.4.0"
 
 from ciel.security import ApprovalPolicy
-from ciel.api import Agent, AgentResponse, Context, ToolFunction, tool
+from ciel.api import Agent, AgentResponse, Context, ToolFunction, skill, teach, tool
 
 __all__ = [
     "__version__",
@@ -17,4 +17,7 @@ __all__ = [
     "Context",
     "ToolFunction",
     "tool",
+    # Fase 12 Item 5 — skill decorator integrated with ciel.Agent
+    "skill",
+    "teach",
 ]

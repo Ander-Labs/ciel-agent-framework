@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
 
 Dates use release date. Versions follow SemVer with initial pre-release `0.1.0`.
 
+## [0.6.0] — Fase 12 (Autonomía I) — 2026-07-16
+
+Fachada de **Skill Library dinámica + auto-verificación** sobre el runtime
+existente (sin cambios incompatibles en el low-level `Skill`/`SkillRegistry`).
+La suite completa pasa (**315 passed / 2 skipped**, +61 tests nuevos).
+
+### Added
+- **`SkillLibrary` + `SkillVerifier`** (`ciel.runtime.skills_lib`): store en
+  memoria writeable que envuelve `SkillRegistry`; `create_from_code()` valida
+  sintaxis, `register`/`get`/`list_skills`/`remove`/`update` (bump semántico +
+  `history()` con linaje). `SkillVerifier.verify(skill, test_cases)` ejecuta
+  casos offline y devuelve `SkillVerificationResult`.
+- **Skill Versioning + changelog + Evolution Tree** (`ciel.runtime.skill_versioning`):
+  `SkillVersion` (major.minor.patch + `changelog` + `released_at`),
+  `set_changelog`/`changelog(lib, name)` y `evolution_tree(lib, name)` (linaje
+  con `parent`/`children` normalizado — base del Skill Evolution Tree único).
+- **Skill Composition Engine** (`ciel.runtime.skill_composition`):
+  `compose(name, skills, combinator)` fusiona N skills (`sequence`/`parallel`/
+  `selector`) en una nueva `Skill`, con detección de callable por AST.
+- **Skill Doc Auto-Generation** (`ciel.runtime.skill_doc`): `generate_doc(skill)`
+  y `to_markdown(skill)` (frontmatter YAML desde docstring + firma).
+- **Integración con `ciel.Agent`** (`ciel.runtime.skill_agent_integration`):
+  `@ciel.skill` (decorator → `SkillLibrary` global, valida sintaxis),
+  `Agent(skills=[...])` carga skills como `ToolFunction` ejecutables, y
+  `agent.teach(skill, test_cases=...)` registra un skill **verificado**.
+  Expuesto como `ciel.skill` / `ciel.teach`. API de Fase 10/11 intacta.
+- **Skill Performance Metrics** (`ciel.runtime.skill_metrics`):
+  `record_usage` + `metrics(name)` con `{calls, successes, failures,
+  success_rate, avg_latency_ms}` y aislamiento por tenant.
+- **CLI `ciel skills`** (`ciel.cli.skills_cli`): `list` / `create` / `verify`
+  / `remove` offline-safe.
+
+### Tests
+- 7 nuevos módulos `tests/test_fase12_*.py` (61 tests): skill_library (13),
+  versioning (12), composition (7), docgen (6), agent_integration (10),
+  metrics (6), cli (7). Todos verdes.
+
 ## [0.5.0] — Fase 11 (Developer Experience II) — 2026-07-16
 
 Continúa la fachada de alto nivel de la Fase 10. Mismo principio: **fachada

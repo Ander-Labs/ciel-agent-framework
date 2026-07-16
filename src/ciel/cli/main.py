@@ -352,6 +352,11 @@ def _load_cost_group():
     return group
 
 
+def _load_skills_group():
+    from ciel.cli.skills_cli import skills_app as group
+    return group
+
+
 app.add_typer(_load_swarm_group(), name="swarm")
 app.add_typer(_load_board_group(), name="board")
 app.add_typer(_load_graph_group(), name="graph")
@@ -361,3 +366,4 @@ app.add_typer(_load_root_group(), name="root")
 app.add_typer(_load_loop_group(), name="loop")
 app.add_typer(_load_rbac_group(), name="rbac")
 app.add_typer(_load_cost_group(), name="cost")
+app.add_typer(_load_skills_group(), name="skills")

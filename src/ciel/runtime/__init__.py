@@ -442,3 +442,13 @@ def _extract_tool_calls(response: ChatResponse) -> List[Dict[str, Any]]:
     if isinstance(message_tool_calls, list):
         return message_tool_calls
     return []
+
+
+# Fase 12 — Dynamic Skill Library + offline verification (facade over skills).
+from ciel.runtime.skills_lib import (  # noqa: E402
+    SkillError,
+    SkillLibrary,
+    SkillVerificationError,
+    SkillVerificationResult,
+    SkillVerifier,
+)
