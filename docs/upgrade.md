@@ -76,5 +76,5 @@ def my_tool(arguments, *, tool_call_id, tenant_id):
 
 ## Enlaces
 
-- Roadmap: [roadmap.md](roadmap.md)
+- Roadmap público (futuras versiones): [roadmap.md](roadmap.md)
 - Releases de GitHub: <https://github.com/Ander-Labs/ciel-agent-framework/releases>

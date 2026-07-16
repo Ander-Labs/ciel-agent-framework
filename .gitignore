@@ -56,7 +56,8 @@ site/
 docs/Prompt.md
 docs/CHARTER.md
 docs/CI.md
-docs/roadmap.md
+# NOTA: docs/roadmap.md es el roadmap PÚBLICO (tracked, mkdocs). El roadmap
+# interno vive en docs/dev/roadmap_interno.md (ignorado más abajo).
 docs/UPGRADE_*.md
 docs/faltante-funcion.md
 docs/dev/
