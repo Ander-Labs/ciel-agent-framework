@@ -10,7 +10,7 @@ Distribuido en PyPI como `mana-ciel` (el import y el CLI se mantienen como
 `ciel`):
 
 ```bash
-pip install mana-ciel
+uv add mana-ciel      # o: pip install mana-ciel
 ciel --help
 ```
 
@@ -86,6 +86,19 @@ print(resp.text)
   Auditoría multi-tenant y trazas de tool execution listas para exportar.
   [:octicons-arrow-right-24: Observability](api-reference/observability.md)
 
+- :material-view-dashboard: **Ciel Studio** (v0.7)
+  ---
+
+  Dashboard offline-safe de sesiones, loops, trazas con replay y coste.
+  [:octicons-arrow-right-24: Ciel Studio](guide/studio.md)
+
+- :material-server-network: **Escala y HA real** (v0.8)
+  ---
+
+  `StateBackend` compartido, health checks `/healthz` y `/readyz`, y resume
+  con lease anti-doble-ejecución para N réplicas.
+  [:octicons-arrow-right-24: Despliegue](guide/deploy.md)
+
 </div>
 
 ---
@@ -135,7 +148,7 @@ print(resp.text)
 |---|---|
 | **PyPI** | `mana-ciel` (import `ciel`) |
 | **Compatibilidad** | Python >= 3.11 |
-| **Versión actual** | `0.5.0` (Fase 11) — `0.4.0` (Fase 10) publicada |
+| **Versión actual** | `0.8.0` — Escala y HA real (StateBackend, `/healthz`, `/readyz`, resume con lease, backup) |
 | **Repositorio** | <https://github.com/Ander-Labs/ciel-agent-framework> |
 | **Releases** | <https://github.com/Ander-Labs/ciel-agent-framework/releases> |
 | **Licencia** | AGPL-3.0-or-later (dual comercial disponible) |

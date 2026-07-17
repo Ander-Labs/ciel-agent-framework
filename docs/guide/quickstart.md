@@ -8,8 +8,15 @@ tools y el dispatcher. Multi-tenancy y trazabilidad se conservan: el
 ## Instalación
 
 ```bash
-pip install mana-ciel   # el import y el CLI se mantienen como `ciel`
+uv add mana-ciel        # o: pip install mana-ciel
+                        # el import y el CLI se mantienen como `ciel`
 ```
+
+!!! tip "Verifica la instalación"
+    ```bash
+    ciel --help
+    python -c "import ciel; print(ciel.__version__)"
+    ```
 
 ## Opción A — 100% offline (copiable y ejecutable)
 

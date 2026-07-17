@@ -271,6 +271,6 @@ metrics.reset(tenant_id="acme")   # limpia el namespace de ese tenant
 
 ## CLI: `ciel skills`
 
-Consulta [`docs/api-reference/cli.md`](../api-reference/cli.md#ciel-skills--gestin-de-la-skill-library-offline)
+Consulta [`docs/api-reference/cli.md`](../api-reference/cli.md#ciel-skills-gestion-de-la-skill-library-offline)
 para la referencia completa del subcomando `ciel skills` (`list`, `create`,
 `verify`, `remove`), operativo de forma offline.

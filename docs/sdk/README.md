@@ -1,20 +1,26 @@
 # Ciel SDK
 
-Guía rápida de uso del SDK de `ciel` para construir agentes empresariales, orquestaciones multi-agente y adaptadores de despliegue.
+Guía rápida de uso del SDK de `ciel` (PyPI `mana-ciel`) para construir agentes
+empresariales, orquestaciones multi-agente y adaptadores de despliegue.
 
-> Nota: este documento apunta a `v0.1.0`.
+!!! tip "¿Empiezas de cero?"
+    Para la ruta más corta usa la **API de alto nivel** (`@ciel.tool`,
+    `ciel.Agent`): consulta el [Inicio rápido](../guide/quickstart.md). Esta
+    página documenta la capa de **runtime de bajo nivel** para casos avanzados
+    (control fino del dispatcher, orquestación por topología, gateway).
 
 ## Requisitos
 
-- Python >= 3.14
+- Python >= 3.11
 - `uv` como gestor de ejecución
-- Instalar en modo editable: `uv pip install -e ".[dev,gateway]"`
+- Instalar el paquete: `uv add mana-ciel` (o en modo editable para desarrollo:
+  `uv pip install -e ".[dev,gateway]"`)
 
 ## Quickstart mínimo
 
 ```python
 import asyncio
-from ciel.providers import ProviderConfig, ProviderRegistry
+from ciel.providers import ProviderConfig, ProviderFactory, ProviderRegistry
 from ciel.runtime import (
     StaticToolProvider,
     DefaultToolDispatcher,
@@ -99,7 +105,7 @@ from ciel.runtime import (
     ToolSpec,
 )
 from ciel.observability import InMemoryAuditSink
-from ciel.orchestration.spec import AgentSpec, AgentStep
+from ciel.orchestration import AgentSpec, AgentStep
 from ciel.orchestration.supervisor import Supervisor
 from ciel.orchestration.topology import TopologyEngine
 
@@ -151,12 +157,11 @@ async def main() -> None:
     )
 
     spec = AgentSpec(
-        id="enterprise-demo",
         name="Enterprise Demo",
         topology="pipeline",
         steps=[
-            AgentStep(id="step-1", name="Echo step", run="echo"),
-            AgentStep(id="step-2", name="Echo step 2", run="echo", depends_on=["step-1"]),
+            AgentStep(id="step-1", kind="tool", tool="echo"),
+            AgentStep(id="step-2", kind="tool", tool="echo", depends_on=["step-1"]),
         ],
     )
 
