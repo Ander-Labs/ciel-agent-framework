@@ -91,6 +91,7 @@ def make_app(
     tenant_id: Optional[str] = None,
     include_mcp: bool = True,
     include_webhook: bool = True,
+    state_backend: Optional[object] = None,
 ) -> FastAPI:
     """Compose the full Ciel gateway into a single FastAPI app.
 
@@ -103,6 +104,11 @@ def make_app(
         Mount the MCP host app at ``/mcp``.
     include_webhook:
         Mount the webhook messaging router at ``/v1/messaging/webhook``.
+    state_backend:
+        Optional pre-built :class:`StateBackend` (Fase 14 / F15). When omitted,
+        one is built from ``CIEL_STATE_BACKEND`` / ``CIEL_STATE_DSN`` (default
+        SQLite). Injecting a shared backend lets tests and multi-replica
+        deployments reuse the same state source.
     """
     tenant_id = tenant_id or os.getenv("CIEL_TENANT")
 
@@ -112,6 +118,20 @@ def make_app(
     tool_provider = ToolProvider(registry=registry, require_tenant_on_execution=True)
     dispatcher = DefaultToolDispatcher(provider=tool_provider, default_toolset="default")
     runtime = DefaultAgentRuntime(provider=chat_provider, dispatcher=dispatcher)
+
+    # --- Fase 14 / F15: StateBackend compartido (multi-réplica) ------------
+    # Construye el backend de estado según CIEL_STATE_BACKEND / CIEL_STATE_DSN
+    # (default: SQLite local offline-safe). Los stores de checkpoint/session
+    # (F16) lo consumen para compartir estado entre réplicas. Expuesto en
+    # app.state para los health endpoints (/readyz) y resume-on-startup.
+    from ciel.runtime.state_backend import StateBackend, build_state_backend
+
+    if state_backend is None:
+        state_backend = build_state_backend()
+    else:
+        # Validación defensiva: debe cumplir la interfaz StateBackend.
+        assert isinstance(state_backend, StateBackend), "state_backend debe ser un StateBackend"
+
 
     # Lazy import to avoid a circular import with the ``ciel.gateway`` package
     # (server.py is imported by gateway/__init__.py; the two helpers below are
@@ -217,6 +237,34 @@ def make_app(
     except Exception as exc:  # pragma: no cover - defensive
         app.state.metrics_mounted = False
         logger.warning("ciel serve: /metrics mount skipped: %s", exc)
+
+    # --- Fase 14 / F15: stores de resume sobre el StateBackend compartido -
+    # Instancia los stores de checkpoint/session contra el backend para que
+    # estén disponibles para resume-on-startup (F16) y otros componentes, sin
+    # alterar el control plane existente. Multi-réplica: comparten state vía
+    # el backend (Postgres en prod, SQLite local en dev).
+    try:
+        from ciel.orchestration.agent import EventLoopCheckpointStore
+        from ciel.orchestration.graph import GraphCheckpointStore
+        from ciel.orchestration.session import SessionStore
+        from ciel.runtime.checkpoints import CheckpointStore
+
+        checkpoint_store = CheckpointStore(state_backend)
+        session_store = SessionStore(state_backend)
+        graph_checkpoint_store = GraphCheckpointStore(state_backend)
+        eventloop_checkpoint_store = EventLoopCheckpointStore(state_backend)
+        app.state.state_backend = state_backend
+        app.state.checkpoint_store = checkpoint_store
+        app.state.session_store = session_store
+        app.state.graph_checkpoint_store = graph_checkpoint_store
+        app.state.eventloop_checkpoint_store = eventloop_checkpoint_store
+        logger.info(
+            "ciel serve: state backend '%s' listo (stores de resume instanciados)",
+            state_backend.backend_type,
+        )
+    except Exception as exc:  # pragma: no cover - defensive
+        app.state.state_backend = state_backend
+        logger.warning("ciel serve: state stores not wired: %s", exc)
 
     return app
 

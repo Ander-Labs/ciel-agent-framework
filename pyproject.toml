@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mana-ciel"
-version = "0.7.0"
+version = "0.8.0"
 description = "Ciel Agent Framework - Enterprise multi-agent harness, model-agnostic, deploy-agnostic"
 readme = "README.md"
 license = { text = "AGPL-3.0-or-later" }
@@ -49,6 +49,7 @@ security = ["python-dotenv>=1.0"]
 observability = ["opentelemetry-api>=1.20", "opentelemetry-sdk>=1.20", "prometheus-client>=0.20"]
 messaging = ["slack-sdk>=3.27"]
 board = ["sqlalchemy>=2.0"]
+pg = ["psycopg[binary]>=3.1"]
 
 [project.scripts]
 ciel = "ciel.cli.main:app"

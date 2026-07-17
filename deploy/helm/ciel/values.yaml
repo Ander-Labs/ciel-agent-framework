@@ -43,6 +43,21 @@ audit:
   storage: 1Gi
   mountPath: /var/lib/ciel/audit
 
+# Backup (Fase 14 / F17): CronJob que vuelca audit/board/state a un volumen
+# persistente (o S3 si CIEL_BACKUP_S3 está configurado como env).
+backup:
+  enabled: true
+  # Horario CronJob (diario a las 03:17 UTC por defecto).
+  schedule: "17 3 * * *"
+  # Volumen persistente donde se guarda el tarball de backup.
+  storage: 5Gi
+  # Backend de state compartido (F15). Si se usa Postgres en prod,
+  # el backup de state lo omite (usa pg_dump fuera del chart).
+  stateBackend: "sqlite"
+  stateDsnSecret: ""        # nombre del Secret con CIEL_STATE_DSN (si stateBackend=postgres)
+  stateDsnKey: "CIEL_STATE_DSN"
+  s3Prefix: ""              # ej. s3://bucket/prefix (si se quiere subir a S3)
+
 # High Availability: PDB + HPA + anti-affinity + topology spread.
 ha:
   # PodDisruptionBudget: garantiza que al menos minAvailable réplicas sigan

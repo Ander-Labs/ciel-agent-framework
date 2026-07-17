@@ -5,7 +5,7 @@ import os
 import uuid
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -30,6 +30,23 @@ logger = logging.getLogger(__name__)
 class HealthResponse(BaseModel):
     status: str = "ok"
     version: str
+
+
+class LivenessResponse(BaseModel):
+    """Liveness: el proceso está vivo (no depende de backends remotos)."""
+
+    status: str = "alive"
+    version: str
+
+
+class ReadinessResponse(BaseModel):
+    """Readiness: el gateway puede atender tráfico (backend conectado + migrado)."""
+
+    status: str  # "ready" | "not_ready"
+    version: str
+    backend: str
+    backend_ready: bool
+    details: Dict[str, Any] = Field(default_factory=dict)
 
 
 class ProviderInfo(BaseModel):
@@ -211,6 +228,35 @@ def create_control_app(
     @app.get("/health", response_model=HealthResponse, tags=["meta"])
     async def health() -> HealthResponse:
         return HealthResponse(version=__version__)
+
+    # --- Fase 14 / F16: health reales (liveness vs readiness) ---------------
+    @app.get("/healthz", response_model=LivenessResponse, tags=["meta"])
+    async def healthz() -> LivenessResponse:
+        # Liveness: el proceso está vivo. No depende de backends remotos.
+        return LivenessResponse(status="alive", version=__version__)
+
+    @app.get("/readyz", response_model=ReadinessResponse, tags=["meta"])
+    async def readyz(request: Request) -> ReadinessResponse:
+        # Readiness: el gateway puede atender tráfico. Depende de que el
+        # StateBackend compartido esté conectado y migrado.
+        backend = getattr(request.app.state, "state_backend", None)
+        if backend is None:
+            # Sin backend cableado => no listo para multi-réplica.
+            return ReadinessResponse(
+                status="not_ready",
+                version=__version__,
+                backend="none",
+                backend_ready=False,
+                details={"reason": "state_backend not wired"},
+            )
+        ready = backend.is_ready()
+        return ReadinessResponse(
+            status="ready" if ready else "not_ready",
+            version=__version__,
+            backend=backend.backend_type,
+            backend_ready=ready,
+            details={"ready": ready},
+        )
 
     @app.get("/info", response_model=InfoResponse, tags=["meta"])
     async def info() -> InfoResponse:

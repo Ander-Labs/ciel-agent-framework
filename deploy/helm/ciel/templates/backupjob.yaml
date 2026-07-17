@@ -1,0 +1,103 @@
+{{- if .Values.backup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "ciel.fullname" . }}-backup
+  labels:
+    {{- include "ciel.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backup
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "ciel.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: backup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["uv", "run", "python", "scripts/backup_state.py"]
+              args:
+                - "--audit-dir"
+                - {{ .Values.audit.mountPath | quote }}
+                - "--state-db"
+                - "/var/lib/ciel/state/state.sqlite"
+                - "--out"
+                - "/backup"
+              envFrom:
+                - configMapRef:
+                    name: {{ include "ciel.fullname" . }}-config
+              env:
+                - name: CIEL_STATE_BACKEND
+                  value: {{ .Values.backup.stateBackend | quote }}
+                {{- if .Values.backup.stateDsnSecret }}
+                - name: CIEL_STATE_DSN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.backup.stateDsnSecret }}
+                      key: {{ .Values.backup.stateDsnKey }}
+                {{- end }}
+                {{- if .Values.backup.s3Prefix }}
+                - name: CIEL_BACKUP_S3
+                  value: {{ .Values.backup.s3Prefix | quote }}
+                {{- end }}
+              volumeMounts:
+                - name: audit
+                  mountPath: {{ .Values.audit.mountPath }}
+                  readOnly: true
+                {{- if .Values.backup.stateBackend }}
+                - name: state
+                  mountPath: /var/lib/ciel/state
+                  readOnly: true
+                {{- end }}
+                - name: backup
+                  mountPath: /backup
+          volumes:
+            - name: audit
+              persistentVolumeClaim:
+                claimName: {{ include "ciel.fullname" . }}-audit
+            {{- if .Values.backup.stateBackend }}
+            - name: state
+              persistentVolumeClaim:
+                claimName: {{ include "ciel.fullname" . }}-state
+            {{- end }}
+            - name: backup
+              persistentVolumeClaim:
+                claimName: {{ include "ciel.fullname" . }}-backup
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "ciel.fullname" . }}-backup
+  labels:
+    {{- include "ciel.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.backup.storage }}
+{{- if .Values.backup.stateBackend }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "ciel.fullname" . }}-state
+  labels:
+    {{- include "ciel.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.audit.storage }}
+{{- end }}
+{{- end }}

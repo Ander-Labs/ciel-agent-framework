@@ -4,6 +4,63 @@ All notable changes to this project will be documented in this file.
 
 Dates use release date. Versions follow SemVer with initial pre-release `0.1.0`.
 
+## [0.8.0] — Fase 14 (Escala y HA real) — 2026-07-17
+
+Hace que `ciel serve` sea **multi-réplica real** (N>=2 detrás de un balanceador)
+para deploy k8s/VPS enterprise. Corresponde a **F15–F18** del roadmap
+interno (`v0.8 — Escala y HA real`). Offline-safe primero: el default siempre
+corre sin remoto (SQLite); Postgres es opt-in.
+
+### F15 — Checkpoint compartido
+- **`ciel.runtime.state_backend`**: ABC `StateBackend` (superficie mínima
+  `set/get/delete/search/record_tool_execution/close` + `is_ready()` para
+  readiness) + `SqliteStateBackend` (default offline) + `PostgresStateBackend`
+  (SQLAlchemy, upsert idempotente por `(tenant_id, session_id, key)` para evitar
+  races entre réplicas). Extra opcional `pg` (`psycopg[binary]`).
+- **`MemoryStore` refactorizado** para heredar de `SqliteStateBackend`:
+  retrocompatible (`MemoryStore(path)` sigue funcionando) y aceptable donde se
+  espera un `StateBackend`. Los 4 stores de resume (`CheckpointStore`,
+  `SessionStore`, `GraphCheckpointStore`, `EventLoopCheckpointStore`) lo consumen
+  sin cambios de API.
+- **`make_app`** lee `CIEL_STATE_BACKEND` / `CIEL_STATE_DSN` (o `CIEL_STATE_SQLITE`)
+  y construye el backend; lo inyecta a los stores de checkpoint/session expuestos
+  en `app.state`.
+
+### F16 — HA operativa
+- **Health reales**: `GET /healthz` (liveness, proceso vivo) y `GET /readyz`
+  (readiness: `StateBackend` conectado + migrado; `{"status":"ready"|"not_ready",
+  "backend":"sqlite|postgres",...}`). `GET /health` queda como alias.
+- **Resume multi-réplica** (`ciel.runtime.resume`): `claim_run_lease` adquiere un
+  lease idempotente por `run_id` con TTL para evitar doble ejecución entre
+  réplicas; `release_run_lease` lo libera; `load_shared_checkpoint` rehidrata
+  desde el backend compartido.
+- El chart Helm apunta las probes de deployment a `/healthz` (liveness) y
+  `/readyz` (readiness).
+
+### F17 — Runbooks + backup
+- **`docs/runbooks/backup.md` CORREGIDO**: el audit (`enterprise/audit.py`) es
+  **JSONL append-only particionado por tenant/session**, NO SQLite (el runbook
+  previo era incorrecto). Board = SQLite; state = SQLite/Postgres.
+- **`scripts/backup_state.py`**: backup offline-safe de audit/board/state (JSON
+  local + tar.gz; S3 opcional vía `CIEL_BACKUP_S3`).
+- **Chart Helm**: `templates/backupjob.yaml` (CronJob `BackupJob`) + bloque
+  `backup:` en `values.yaml` que vuelca audit/board/state a un PVC (o S3).
+- **`docs/runbooks/incident.md`** actualizado: resume multi-réplica con lease;
+  `/readyz` `not_ready` semántica.
+
+### F18 — Cierre de release v0.8.0
+- Bump `pyproject.toml` 0.7.0 → 0.8.0; `uv.lock` regenerado.
+- **Suite completa: 353 passed / 2 skipped** (+14 tests Fase 14).
+- Release v0.8.0: tag + push + PyPI `mana-ciel` + GitHub Release "v0.8.0".
+
+### Notas
+- **No rompe API**: F15 solo cambia type hints + añade un parámetro de backend;
+  `MemoryStore` sigue siendo construible igual.
+- **Decisión de diseño**: en prod el checkpoint STATE se comparte vía
+  `StateBackend` (Postgres); los dashboards de Studio (costo/trace) son
+  best-effort por réplica. No usar SQLite sobre PVC RWX (corrupción bajo
+  concurrencia).
+
 ## [0.7.0] — Fase 13 (Ciel Studio / Observabilidad) — 2026-07-17
 
 **Item 1 (F19) — Ciel Studio dashboard mínimo** (`ciel.studio`, offline-safe,

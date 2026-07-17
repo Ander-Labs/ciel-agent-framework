@@ -53,6 +53,39 @@ Variables de entorno relevantes (ver [Configuración](configuration.md)):
 - `CIEL_TEAMS_WEBHOOK` / `CIEL_DISCORD_WEBHOOK` — adapters de canal.
 - `CIEL_BOARD_DB` — ruta de la DB del board Kanban.
 - `--otel-endpoint` — colector OTLP (si no, traces in-memory offline-safe).
+- **Multi-réplica (Fase 14 / F15+F16):**
+  - `CIEL_STATE_BACKEND` — `sqlite` (default, offline-safe) o `postgres` (prod).
+  - `CIEL_STATE_DSN` — DSN de Postgres cuando `CIEL_STATE_BACKEND=postgres`.
+  - `CIEL_STATE_SQLITE` — ruta del `.sqlite` cuando `CIEL_STATE_BACKEND=sqlite`.
+
+## Multi-réplica real (Escala y HA)
+
+Para correr N>=2 réplicas detrás de un balanceador (k8s/VPS), el **state de
+checkpoint/session debe ser compartido**, no por-proceso. Ciel resuelve esto con
+un `StateBackend` (F15):
+
+- **Dev/local:** `CIEL_STATE_BACKEND=sqlite` (default). Cada réplica usa su
+  propio `.sqlite`; válido solo para una réplica.
+- **Prod:** `CIEL_STATE_BACKEND=postgres` + `CIEL_STATE_DSN`. Todas las réplicas
+  leen/escriben el mismo Postgres con upsert idempotente por
+  `(tenant_id, session_id, key)`, así que un checkpoint escrito por la réplica A
+  es visible al instante en la réplica B. **No uses SQLite sobre PVC RWX** (se
+  corrompe bajo concurrencia).
+
+Health reales (F16):
+
+- `GET /healthz` — **liveness** (el proceso está vivo; no depende de remotos).
+- `GET /readyz` — **readiness** (el `StateBackend` está conectado y migrado).
+  Devuelve `{"status":"ready"|"not_ready","backend":"sqlite|postgres",...}`.
+- `GET /health` — alias de compatibilidad (solo versión).
+
+Configura las probes del deployment en `/healthz` (liveness) y `/readyz`
+(readiness) para que k8s saque del balanceador a una réplica cuyo backend no
+esté listo. El chart Helm ya viene con estas probes.
+
+Resume entre réplicas (F16): `claim_run_lease(run_id)` adquiere un lease
+idempotente con TTL para evitar doble ejecución de un `run_id`. Ver
+`docs/runbooks/incident.md` (sección 3) y `src/ciel/runtime/resume.py`.
 
 ## Human-in-the-Loop en producción
 
