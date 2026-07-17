@@ -164,6 +164,19 @@ def make_app(
     except Exception as exc:  # pragma: no cover - defensive
         logger.warning("ciel serve: channel adapters not mounted: %s", exc)
 
+    # --- Fase 13 / F19: Ciel Studio dashboard (offline-safe) --------
+    # Expone /v1/studio con el snapshot de sesiones/loops. Usa el store
+    # singleton de studio (compartido con install_studio_support).
+    try:
+        from ciel.studio import create_studio_router, get_studio_store
+
+        studio_store = get_studio_store()
+        app.include_router(create_studio_router(store=studio_store))
+        app.state.studio_store = studio_store
+        logger.info("ciel serve: mounted Ciel Studio dashboard at /v1/studio")
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.warning("ciel serve: Ciel Studio not mounted: %s", exc)
+
     # --- Prometheus /metrics endpoint (lenient) --------------------------
     # Only mounted when prometheus-client is available; otherwise the import
     # is skipped so the gateway still boots offline.

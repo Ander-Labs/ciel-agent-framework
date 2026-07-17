@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 Dates use release date. Versions follow SemVer with initial pre-release `0.1.0`.
 
+## [0.7.0] — Fase 13 (Ciel Studio / Observabilidad) — 2026-07-17
+
+**Item 1 (F19) — Ciel Studio dashboard mínimo** (`ciel.studio`, offline-safe,
+multitenant). La suite completa pasa (**325 passed / 2 skipped**, +10 tests).
+
+### Added
+- **`ciel.studio`**: `StudioStore` (en memoria, aislado por `tenant_id`) que
+  registra `SessionRecord` (prompt, respuesta, tool-calls, turns) y
+  `LoopRecord`; `snapshot()` devuelve sesiones + loops + counts.
+- **`install_studio_support(agent)`**: envuelve `agent.run`/`agent.arun` para
+  registrar cada ejecución en el store **sin cambiar la firma ni el retorno**
+  (fachada sobre `ciel.Agent` existente).
+- **Router FastAPI `create_studio_router()`** en `GET /v1/studio` (snapshot),
+  `/sessions`, `/loops`, `/health`; montado automáticamente por `ciel serve`.
+- **CLI `ciel studio show`** (`src/ciel/cli/studio_cli.py`): imprime el
+  dashboard en consola. Expuesto como `ciel studio`.
+- **Docs**: `docs/guide/studio.md`, `docs/api-reference/studio.md`, nav en
+  `mkdocs.yml`; `roadmap.md` corregido (v0.6 = Autonomía I ya liberada,
+  v0.7 = Ciel Studio siguiente, "Escala y HA real" reordenada a v0.8).
+
+### Notas
+- `WebUIAdapter` + su router (Fase 8) ya eran funcionales offline; Fase 13
+  los complementa con el panel de observabilidad. Items F20 (trace/replay) y
+  F21 (cost dashboard) y F22 (cierre v0.7.0) quedan pendientes.
+
 ## [0.6.0] — Fase 12 (Autonomía I) — 2026-07-16
 
 Fachada de **Skill Library dinámica + auto-verificación** sobre el runtime

@@ -7,6 +7,12 @@ except PackageNotFoundError:  # pragma: no cover
 
 from ciel.security import ApprovalPolicy
 from ciel.api import Agent, AgentResponse, Context, ToolFunction, skill, teach, tool
+from ciel.studio import (
+    StudioStore,
+    create_studio_router,
+    get_studio_store,
+    install_studio_support,
+)
 
 __all__ = [
     "__version__",
@@ -20,4 +26,9 @@ __all__ = [
     # Fase 12 Item 5 — skill decorator integrated with ciel.Agent
     "skill",
     "teach",
+    # Fase 13 / F19 — Ciel Studio (observability dashboard)
+    "StudioStore",
+    "get_studio_store",
+    "install_studio_support",
+    "create_studio_router",
 ]

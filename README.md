@@ -95,6 +95,15 @@ Covers:
 
 ## Status
 
+**Release actual: v0.6.0 — ✅ Disponible (Fase 12: Autonomía I — Skill Library).**
+
+La v0.6.0 entrega la **Autonomía I: Skill Library** (adelantada de la v1.2
+original del roadmap): library dinámica con auto-verificación offline, versioning
++ changelog, composition engine, doc auto-generation, integración con
+`ciel.Agent` (`@ciel.skill` / `agent.teach`), métricas por tenant y el CLI
+`ciel skills`. Ver [`docs/roadmap.md`](docs/roadmap.md) y
+[`docs/guide/skills.md`](docs/guide/skills.md).
+
 ### Fase 1 — Runtime básico: ✅ Cerrada
 - `ciel.providers` OpenAI-compatible y Anthropic
 - runtime agent loop con tool_calls
@@ -245,6 +254,28 @@ Entregado en esta sesión:
 Verificación actual: `uv run pytest tests/` → 254 passed, 2 skipped;
 `uv run mkdocs build --strict` → exit 0; `examples/quickstart_agent.py` y
 `examples/lowlevel_agent.py` → exit 0.
+
+### Fase 12 — Autonomía I: Skill Library: ✅ Cerrada
+El agente **crea, verifica, versiona y enseña** sus propios skills (offline-safe).
+
+Entregado en esta sesión:
+- **`ciel.runtime.skills_lib`**: `SkillLibrary` (store escribible sobre el
+  registry pasivo: `create_from_code`, `register`, `get`, `list_skills`,
+  `history`, `update` con bump semántico, `remove`) y `SkillVerifier`
+  (verificación offline: sintaxis + casos de prueba `{"call", "expect"}`).
+- **`ciel.runtime.skill_versioning`**: `set_changelog` / `changelog` y
+  `evolution_tree` (semilla del Skill Evolution Tree, lineage por versión).
+- **`ciel.runtime.skill_composition`**: `SkillComposition.compose` fusiona N
+  skills con combinadores `sequence` / `parallel` / `selector`.
+- **`ciel.runtime.skill_doc`**: `generate_doc` y `to_markdown` (doc desde AST).
+- **`ciel.runtime.skill_agent_integration`**: `@ciel.skill`,
+  `global_skill_library` (singleton), `Agent(skills=[...])`, `agent.teach(...)`
+  / `ciel.teach(agent, skill)` y `agent.load_skills(...)`.
+- **`ciel.runtime.skill_metrics`**: `SkillMetrics` por `tenant_id` (llamadas,
+  éxitos/fallos, tasa de éxito, latencia promedio).
+- **`ciel skills`** (CLI offline): `list`, `create --name --description
+  --code-file`, `verify --name --test-cases`, `remove --name`.
+
 
 
 Ciel está diseñado para extenderse sin tocar el core:

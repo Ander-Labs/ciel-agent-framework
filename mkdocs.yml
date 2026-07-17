@@ -99,6 +99,8 @@ nav:
       - Tools: guide/tools.md
       - Providers: guide/providers.md
       - Plugins: guide/plugins.md
+      - Skill Library: guide/skills.md
+      - Ciel Studio: guide/studio.md
       - Tutorial de plugin: guide/tutorial_plugin.md
       - Despliegue: guide/deploy.md
       - Configuración: guide/configuration.md
@@ -127,6 +129,8 @@ nav:
       - Gateway: api-reference/gateway.md
       - Providers: api-reference/providers.md
       - Runtime: api-reference/runtime.md
+      - Skill Library: api-reference/skills_lib.md
+      - Ciel Studio: api-reference/studio.md
       - Security: api-reference/security.md
       - Orchestration: api-reference/orchestration.md
   - SDK: sdk/README.md
