@@ -130,7 +130,9 @@ nav:
       - Providers: api-reference/providers.md
       - Runtime: api-reference/runtime.md
       - Skill Library: api-reference/skills_lib.md
-      - Ciel Studio: api-reference/studio.md
+      - Ciel Studio: "api-reference/studio.md"
+      - Ciel Studio: Trace: "api-reference/studio_trace.md"
+      - Ciel Studio: Cost: "api-reference/studio_cost.md"
       - Security: api-reference/security.md
       - Orchestration: api-reference/orchestration.md
   - SDK: sdk/README.md

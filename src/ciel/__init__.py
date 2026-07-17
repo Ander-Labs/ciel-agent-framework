@@ -13,6 +13,18 @@ from ciel.studio import (
     get_studio_store,
     install_studio_support,
 )
+from ciel.studio_trace import (
+    GraphTraceStore,
+    attach_trace,
+    create_trace_router,
+    get_trace_store,
+)
+from ciel.studio_cost import (
+    CostDashboardStore,
+    attach_cost_tracking,
+    create_cost_router,
+    get_cost_store,
+)
 
 __all__ = [
     "__version__",
@@ -31,4 +43,14 @@ __all__ = [
     "get_studio_store",
     "install_studio_support",
     "create_studio_router",
+    # Fase 13 / F20 — Ciel Studio: graph trace + replay
+    "GraphTraceStore",
+    "attach_trace",
+    "get_trace_store",
+    "create_trace_router",
+    # Fase 13 / F21 — Ciel Studio: cost dashboard
+    "CostDashboardStore",
+    "attach_cost_tracking",
+    "get_cost_store",
+    "create_cost_router",
 ]

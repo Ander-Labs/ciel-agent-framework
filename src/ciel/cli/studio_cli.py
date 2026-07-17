@@ -78,3 +78,73 @@ def show(
                 (l.get("last_event") or "")[:32],
             )
         console.print(t2)
+
+
+@studio_app.command("trace")
+def trace(
+    run_id: str = typer.Argument(None, help="run_id del grafo a inspeccionar."),
+    tenant: str = typer.Option(None, "--tenant", "-t", help="Filtrar por tenant_id."),
+) -> None:
+    """Muestra runs de grafos y su replay (F20). Sin run_id lista los runs."""
+    from ciel.studio_trace import get_trace_store
+
+    store = get_trace_store()
+    if run_id:
+        run = store.get_run(run_id, tenant_id=tenant)
+        if run is None:
+            console.print(f"[red]run no encontrado:[/red] {run_id}")
+            raise typer.Exit(code=1)
+        replay = store.replay(run_id)
+        console.print(
+            Panel.fit(
+                f"[bold]Run[/bold] {run_id[:16]} — pasos:[cyan]{len(replay)}[/] "
+                f"tenant:[cyan]{run.get('tenant_id', '')}[/]",
+                title="Graph Trace / Replay",
+            )
+        )
+        t = Table(title="Replay (step a step)", show_lines=False)
+        t.add_column("step")
+        t.add_column("paused")
+        t.add_column("node")
+        for i, st in enumerate(replay):
+            t.add_row(str(i), str(st.get("paused", False)), str(st.get("paused_node") or ""))
+        console.print(t)
+    else:
+        runs = store.list_runs(tenant_id=tenant)
+        if not runs:
+            console.print("[dim](sin runs de grafo registrados)[/dim]")
+            return
+        t = Table(title="Graph Runs", show_lines=False)
+        t.add_column("run_id", style="dim")
+        t.add_column("tenant")
+        t.add_column("steps")
+        for r in runs[:20]:
+            t.add_row(r.get("run_id", "")[:16], r.get("tenant_id", ""), str(len(r.get("steps", []))))
+        console.print(t)
+
+
+@studio_app.command("cost")
+def cost(
+    tenant: str = typer.Option(None, "--tenant", "-t", help="Filtrar por tenant_id."),
+) -> None:
+    """Muestra el dashboard de costos (F21) leído del CostGovernor."""
+    from ciel.studio_cost import get_cost_store
+
+    store = get_cost_store()
+    summary = store.summary(tenant_id=tenant)
+    console.print(
+        Panel.fit(
+            f"[bold]Cost[/bold] total:[cyan]${summary.get('total_usd', 0.0):.4f}[/] "
+            f"requests:[cyan]{summary.get('requests', 0)}[/] "
+            f"tenants:[cyan]{summary.get('tenants', 0)}[/]",
+            title="Cost Dashboard",
+        )
+    )
+    by_model = summary.get("by_model", {})
+    if by_model:
+        t = Table(title="Por modelo", show_lines=False)
+        t.add_column("model")
+        t.add_column("$")
+        for m, usd in sorted(by_model.items(), key=lambda kv: -kv[1]):
+            t.add_row(m, f"{usd:.4f}")
+        console.print(t)

@@ -177,6 +177,28 @@ def make_app(
     except Exception as exc:  # pragma: no cover - defensive
         logger.warning("ciel serve: Ciel Studio not mounted: %s", exc)
 
+    # --- Fase 13 / F20: Ciel Studio graph trace + replay ------------
+    try:
+        from ciel.studio_trace import create_trace_router, get_trace_store
+
+        trace_store = get_trace_store()
+        app.include_router(create_trace_router(store=trace_store))
+        app.state.trace_store = trace_store
+        logger.info("ciel serve: mounted Ciel Studio trace at /v1/studio/trace")
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.warning("ciel serve: Ciel Studio trace not mounted: %s", exc)
+
+    # --- Fase 13 / F21: Ciel Studio cost dashboard -------------------
+    try:
+        from ciel.studio_cost import create_cost_router, get_cost_store
+
+        cost_store = get_cost_store()
+        app.include_router(create_cost_router(store=cost_store))
+        app.state.cost_store = cost_store
+        logger.info("ciel serve: mounted Ciel Studio cost at /v1/studio/cost")
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.warning("ciel serve: Ciel Studio cost not mounted: %s", exc)
+
     # --- Prometheus /metrics endpoint (lenient) --------------------------
     # Only mounted when prometheus-client is available; otherwise the import
     # is skipped so the gateway still boots offline.

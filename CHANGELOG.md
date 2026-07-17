@@ -24,10 +24,38 @@ multitenant). La suite completa pasa (**325 passed / 2 skipped**, +10 tests).
   `mkdocs.yml`; `roadmap.md` corregido (v0.6 = Autonomía I ya liberada,
   v0.7 = Ciel Studio siguiente, "Escala y HA real" reordenada a v0.8).
 
+### F20 — Graph view + replay / time-travel (`ciel.studio_trace`)
+- **`GraphTraceStore`** (en memoria, offline): registra cada checkpoint de
+  `GraphCheckpointStore` (`record_checkpoint`, `list_runs`, `get_run` con
+  `steps[]` ordenados, `replay(run_id)` → estados step a step, `snapshot()`).
+- **`attach_trace(checkpointer)`**: envuelve `save` sin cambiar firma/retorno.
+- **Router `create_trace_router()`** en `GET /v1/studio/trace` (`/runs`,
+  `/runs/{id}`, `/runs/{id}/replay`, `/health`); montado por `ciel serve`.
+- **CLI `ciel studio trace`** (lista runs / replay de un run).
+
+### F21 — Cost dashboard (`ciel.studio_cost`)
+- **`CostDashboardStore`** (en memoria, offline): acumula métricas por tenant
+  (`record`, `by_tenant`, `summary` → `{total_usd, by_model, requests,
+  tenants}`, `top_tenants`).
+- **`attach_cost_tracking(governor)`**: envuelve `CostGovernor.record` para
+  espejar gasto en el dashboard sin cambiar firma/retorno.
+- **Router `create_cost_router()`** en `GET /v1/studio/cost` (`/summary`,
+  `/by-tenant`, `/top`, `/health`); montado por `ciel serve`.
+- **CLI `ciel studio cost`** (resumen por modelo/tenant).
+
+### F22 — Cierre de release v0.7.0
+- Integración: `ciel/__init__.py` expone `studio`, `studio_trace`,
+  `studio_cost`; `ciel serve` monta los 3 routers; `mkdocs.yml` con nav de
+  trace/cost.
+- Bump `pyproject.toml` 0.6.0 → 0.7.0; `uv.lock` regenerado.
+- **Suite completa: 339 passed / 2 skipped** (+24 tests Fase 13).
+- Release v0.7.0: tag + push + PyPI `mana-ciel` + GitHub Release "v0.7.0".
+
 ### Notas
 - `WebUIAdapter` + su router (Fase 8) ya eran funcionales offline; Fase 13
-  los complementa con el panel de observabilidad. Items F20 (trace/replay) y
-  F21 (cost dashboard) y F22 (cierre v0.7.0) quedan pendientes.
+  los complementa con el panel de observabilidad (sesiones/loops, trace/replay
+  y costos). Todos los módulos son fachadas offline-safe sobre el runtime
+  existente (sin cambios incompatibles).
 
 ## [0.6.0] — Fase 12 (Autonomía I) — 2026-07-16
 

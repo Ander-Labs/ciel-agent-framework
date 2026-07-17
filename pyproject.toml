@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mana-ciel"
-version = "0.6.0"
+version = "0.7.0"
 description = "Ciel Agent Framework - Enterprise multi-agent harness, model-agnostic, deploy-agnostic"
 readme = "README.md"
 license = { text = "AGPL-3.0-or-later" }
