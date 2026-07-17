@@ -82,21 +82,24 @@ propios skills, todo offline-safe (sin red ni API keys):
 - **CLI `ciel skills`** (offline): `list`, `create --name --description
   --code-file`, `verify --name --test-cases`, `remove --name`.
 
-### v0.7 — 🟡 En desarrollo (Ciel Studio — Web UI + observabilidad visual)
+### v0.7 — ✅ Disponible (Ciel Studio — Web UI + observabilidad visual)
 
-Siguiente fase (Fase 13). Dashboard mínimo operativo y observabilidad visual:
+Dashboard mínimo operativo y observabilidad visual:
 
 - **Web UI** y dashboard mínimo: sesiones, board, loops y estado.
 - Visualización de trazas y **replay** de session (time-travel); **cost dashboard**.
 
-### v0.8 — 📋 Escala y HA real
+### v0.8 — ✅ Disponible (Escala y HA real)
 
 (Reordenado desde la v0.6 original del roadmap.)
 
-- Backend de estado/checkpoint **compartido** (Postgres o SQLite sobre PVC)
-  para supervivencia multi-réplica sin pérdida de sesión.
-- Ejecución de N réplicas con health + reanudación de checkpoint compartido.
-- Runbooks operativos completos (despliegue, incidente, rollback, backup, HPA).
+- Backend de estado/checkpoint **compartido** (`StateBackend`: Postgres para
+  prod, SQLite para dev/local) para supervivencia multi-réplica sin pérdida de
+  sesión, con upsert idempotente por `(tenant_id, session_id, key)`.
+- Ejecución de N réplicas con **health reales** (`/healthz` liveness, `/readyz`
+  readiness) y reanudación de checkpoint compartido con **lease** anti-doble-ejecución.
+- Runbooks operativos completos (despliegue, incidente, rollback, backup, HPA)
+  y `BackupJob` (CronJob) en el chart Helm.
 
 ### v0.9 — 📋 Enterprise reforzado
 
