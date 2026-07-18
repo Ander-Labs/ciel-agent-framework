@@ -128,14 +128,45 @@ class DefaultToolDispatcher:
         return results
 
 
+# A single content part is a dict, e.g. {"type": "text", "text": "..."} or
+# {"type": "image_url", "image_url": {"url": "data:image/png;base64,..."}}.
+ContentPart = Dict[str, Any]
+
+# Multimodal: content may be a plain string (legacy/most common) or a list of
+# content parts (vision/audio/video). The ``str`` contract is fully preserved;
+# passing a string keeps working unchanged everywhere.
+ChatContent = "str | list[ContentPart]"
+
+
 @dataclass(frozen=True)
 class ChatMessage:
     role: str
-    content: str
+    content: ChatContent
     name: Optional[str] = None
     tool_call_id: Optional[str] = None
     tool_calls: Optional[list[dict[str, Any]]] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def text(self) -> str:
+        """Extract plain text from content, tolerant to multimodal parts.
+
+        - ``str`` content is returned verbatim.
+        - ``list`` content concatenates the ``text`` of every part whose type
+          is ``"text"`` but drops images/audio/video, so consumers (CLI,
+          compression, ``AgentResponse.text``) see only readable text.
+        """
+        content = self.content
+        if isinstance(content, str):
+            return content
+        if not isinstance(content, list):
+            return ""
+        parts: list[str] = []
+        for part in content:
+            if isinstance(part, dict) and part.get("type") == "text":
+                text = part.get("text", "")
+                if isinstance(text, str):
+                    parts.append(text)
+        return "".join(parts)
 
 
 @dataclass(frozen=True)

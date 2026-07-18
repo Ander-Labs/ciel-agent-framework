@@ -9,8 +9,16 @@ from ciel.common import CielError, TenantRequired
 from ciel.observability import AuditEvent, InMemoryAuditSink, NullAuditSink, assert_tenant_event, propagate
 from ciel.providers import ChatProvider, ProviderRegistry
 from ciel.runtime.tools import (
+    AgentContext,
+    AgentRuntimeResult,
+    ChatChoice,
+    ChatMessage,
+    ChatRequest,
+    ChatResponse,
+    ContentPart,
     Tool,
     ToolExecutionContext,
+    ToolLoopResult,
     ToolRegistry,
     ToolResult,
     ToolSpec,
@@ -18,8 +26,24 @@ from ciel.runtime.tools import (
 )
 
 
+# Re-export the chat DTOs from ``runtime.tools`` (single source of truth, which
+# carries ``ChatMessage.text()``). The concrete ``ToolProvider`` below stays
+# local because it is wired into ``DefaultToolDispatcher`` / ``DefaultAgentRuntime``.
+@dataclass(frozen=True)
+class ModelProvider:
+    """Legacy model/provider contract (kept for backward-compat, unused by ChatProvider)."""
+
+    async def complete(self, request: ChatRequest) -> ChatResponse:
+        raise NotImplementedError
+
+    async def stream(self, request: ChatRequest) -> Sequence[ChatResponse]:
+        raise NotImplementedError
+
+
 @dataclass(frozen=True)
 class ToolProvider:
+    """Concrete tool provider used by the runtime's tool dispatcher."""
+
     registry: ToolRegistry
     require_tenant_on_execution: bool = True
 
@@ -127,66 +151,14 @@ class DefaultToolDispatcher:
         return results
 
 
-@dataclass(frozen=True)
-class ChatMessage:
-    role: str
-    content: str
-    name: Optional[str] = None
-    tool_call_id: Optional[str] = None
-    tool_calls: Optional[List[Dict[str, Any]]] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass(frozen=True)
-class ChatChoice:
-    message: ChatMessage
-    finish_reason: str
-    usage: Optional[Dict[str, Any]] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass(frozen=True)
-class ChatRequest:
-    messages: Sequence[ChatMessage]
-    tools: Sequence[ToolSpec] = ()
-    model: Optional[str] = None
-    temperature: Optional[float] = None
-    max_tokens: Optional[int] = None
-    extra: Dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass(frozen=True)
-class ChatResponse:
-    choice: ChatChoice
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-
 class ModelProvider:
-    """Model/provider contract for completions."""
+    """Model/provider contract for completions (legacy alias)."""
 
     async def complete(self, request: ChatRequest) -> ChatResponse:
         raise NotImplementedError
 
     async def stream(self, request: ChatRequest) -> Sequence[ChatResponse]:
         raise NotImplementedError
-
-
-@dataclass(frozen=True)
-class ToolLoopResult:
-    turn_id: str
-    messages: Sequence[ChatMessage]
-    tool_results: Sequence[ToolResult]
-    finish_reason: str
-    tenant_id: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass(frozen=True)
-class AgentRuntimeResult:
-    response: ChatResponse
-    loop_results: Sequence[ToolLoopResult]
-    tenant_id: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -427,7 +399,7 @@ class DefaultAgentRuntime:
         chunks = await self.provider.stream(request=request)
         prior = ""
         for chunk in chunks:
-            content = chunk.choice.message.content or ""
+            content = chunk.choice.message.text()
             if content != prior:
                 yield content
                 prior = content

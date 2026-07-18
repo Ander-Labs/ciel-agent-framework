@@ -41,7 +41,7 @@ def compress_context(
     if not messages:
         raise ContextCompressionError("messages must not be empty")
 
-    total = sum(len(message.content or "") for message in messages)
+    total = sum(len(message.text()) for message in messages)
     if total <= max_chars:
         return list(messages), MessageSlice(keep_head=len(messages), keep_tail=keep_tail, removed=0)
 

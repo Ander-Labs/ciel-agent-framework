@@ -53,7 +53,7 @@ class _EchoProvider:
     provider_name = "echo"
 
     async def complete(self, request) -> ChatResponse:
-        prompt = request.messages[-1].content if request.messages else ""
+        prompt = request.messages[-1].text() if request.messages else ""
         return ChatResponse(
             choice=ChatChoice(
                 message=ChatMessage(role="assistant", content=f"echo:{prompt}"),

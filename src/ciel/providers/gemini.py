@@ -7,7 +7,7 @@ OpenAI/Anthropic providers.
 
 from __future__ import annotations
 
-from typing import Any, Optional, Sequence
+from typing import Any, List, Optional, Sequence
 
 import httpx
 
@@ -72,7 +72,7 @@ class GeminiProvider(ChatProvider):
         contents = []
         for message in request.messages:
             role = "model" if message.role == "assistant" else "user"
-            contents.append({"role": role, "parts": [{"text": message.content or ""}]})
+            contents.append({"role": role, "parts": _gemini_parts(message.content)})
         payload: dict[str, Any] = {"contents": contents}
         gen_cfg = {}
         if request.temperature is not None:
@@ -90,6 +90,50 @@ class GeminiProvider(ChatProvider):
             return ""
         parts = candidates[0].get("content", {}).get("parts", []) or []
         return "".join(part.get("text", "") for part in parts if isinstance(part, dict))
+
+
+def _gemini_parts(content: Any) -> List[Dict[str, Any]]:
+    """Normalize ``str | list[dict]`` content to Gemini parts.
+
+    - ``str`` -> ``[{"text": <content>}]``
+    - ``list`` -> maps each part to a Gemini part:
+        * ``{"type": "text", "text": ...}`` -> ``{"text": ...}``
+        * ``{"type": "image_url", "image_url": {"url": "data:..."}}`` ->
+          ``{"inline_data": {"mime_type": ..., "data": <b64>}}``
+    """
+    if isinstance(content, str):
+        return [{"text": content}]
+    if not isinstance(content, list):
+        return [{"text": ""}]
+    parts: List[Dict[str, Any]] = []
+    for part in content:
+        if not isinstance(part, dict):
+            continue
+        ptype = part.get("type")
+        if ptype == "text":
+            text = part.get("text", "")
+            if isinstance(text, str):
+                parts.append({"text": text})
+        elif ptype == "image_url":
+            url = (part.get("image_url") or {}).get("url", "")
+            mime, data = _split_data_url(url)
+            if mime is not None and data is not None:
+                parts.append({"inline_data": {"mime_type": mime, "data": data}})
+    return parts or [{"text": ""}]
+
+
+def _split_data_url(url: str) -> "tuple[Optional[str], Optional[str]]":
+    """Split a ``data:<mime>;base64,<data>`` URL into (mime, b64)."""
+    if not isinstance(url, str) or not url.startswith("data:"):
+        return None, None
+    try:
+        meta, data = url[5:].split(",", 1)
+    except ValueError:
+        return None, None
+    if ";base64" not in meta:
+        return None, None
+    mime = meta.split(";base64", 1)[0] or "application/octet-stream"
+    return mime, data
 
 
 class _NullCtx:

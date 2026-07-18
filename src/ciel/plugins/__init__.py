@@ -65,8 +65,25 @@ class PluginRegistry:
         self.register_provider("openai", OpenAICompatibleProvider(base_url="https://api.openai.com/v1"))
         self.register_provider("anthropic", AnthropicProvider())
         self.register_provider("gemini", GeminiProvider())
+        self._register_litellm()
         register_builtin_tools(self.tools)
         self._loaded = True
+
+    def _register_litellm(self) -> None:
+        """Register the LiteLLM meta-provider only if the extra is installed.
+
+        Offline-safe: the heavy ``litellm`` dependency is never imported unless
+        it is actually present, so the default framework stays lightweight.
+        """
+        try:
+            from ciel.providers.litellm import LiteLLMProvider
+        except ImportError:
+            return
+        # Register a placeholder factory keyed by provider name "litellm"; the
+        # concrete model/api_key are supplied at use time via ProviderFactory
+        # or an explicit LiteLLMProvider instance. We expose the class so
+        # discover_installed / direct registration can build one on demand.
+        self._litellm_provider_cls = LiteLLMProvider  # type: ignore[attr-defined]
 
     def discover_installed(self) -> None:
         """Discover third-party plugins via entry points (offline-safe)."""

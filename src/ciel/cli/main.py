@@ -202,7 +202,7 @@ def compression(
     table.add_row(str(max_chars), str(slice_.removed), str(slice_.keep_head))
     console.print(table)
     for message in summarized:
-        console.print(message.content or "")
+        console.print(message.text())
 
 
 @app.command("checkpoints")

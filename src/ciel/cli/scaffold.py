@@ -91,7 +91,7 @@ if __name__ == "__main__":
     import asyncio
     rt = build_runtime()
     result = asyncio.run(rt.run_agent_loop(request=ChatRequest(messages=[ChatMessage(role="user", content="hello")]), tenant_id="default"))
-    print(getattr(getattr(result.response, "choice", None), "message", None).content)
+    print(getattr(getattr(result.response, "choice", None), "message", None).text())
 '''
 
 _CIEL_YAML = """\

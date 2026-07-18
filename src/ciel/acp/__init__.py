@@ -109,7 +109,7 @@ class ACPServer:
 
 
 class AskRequest(BaseModel):
-    prompt: str
+    prompt: "str | list[dict[str, Any]]"
     model: Optional[str] = None
     toolset: str = "demo"
     tenant_id: Optional[str] = None
@@ -230,7 +230,7 @@ def create_app(
         )
         message = result.response.choice.message
         return AskResponse(
-            text=message.content or "",
+            text=message.text(),
             session_id=result.metadata.get("session_id"),
         )
 

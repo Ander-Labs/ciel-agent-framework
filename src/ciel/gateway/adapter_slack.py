@@ -133,9 +133,9 @@ class SlackAdapter(MessagingAdapter):
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(
             None,
-            lambda: client.chat_postMessage(channel=channel, text=message.content),
+            lambda: client.chat_postMessage(channel=channel, text=message.text()),
         )
-        logger.debug("SlackAdapter.send -> channel=%s len=%d", channel, len(message.content))
+        logger.debug("SlackAdapter.send -> channel=%s len=%d", channel, len(message.text()))
 
     async def receive(self) -> AsyncIterator[Message]:
         """Yield inbound Slack messages via a simple polling loop.

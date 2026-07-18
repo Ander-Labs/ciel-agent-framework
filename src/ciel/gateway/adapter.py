@@ -32,8 +32,27 @@ class Message:
     id: str
     channel: str
     sender: Optional[str]
-    content: str
+    content: "str | list[dict[str, Any]]"
     metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def text(self) -> str:
+        """Extract plain text from content, tolerant to multimodal parts.
+
+        Mirrors :meth:`ciel.runtime.ChatMessage.text`: returns ``str`` content
+        verbatim, or concatenates the ``text`` of every ``text`` part in a list.
+        """
+        content = self.content
+        if isinstance(content, str):
+            return content
+        if not isinstance(content, list):
+            return ""
+        parts: list[str] = []
+        for part in content:
+            if isinstance(part, dict) and part.get("type") == "text":
+                text = part.get("text", "")
+                if isinstance(text, str):
+                    parts.append(text)
+        return "".join(parts)
 
 
 class MessagingAdapter:

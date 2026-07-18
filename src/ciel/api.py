@@ -322,9 +322,13 @@ class AgentResponse:
 
     @property
     def text(self) -> str:
-        """The final assistant message content (empty string if none)."""
+        """The final assistant message text (empty string if none).
+
+        Uses :meth:`ChatMessage.text` so multimodal content (images/audio)
+        degrades gracefully to its text parts rather than raising.
+        """
         try:
-            return self.raw.response.choice.message.content or ""
+            return self.raw.response.choice.message.text()
         except AttributeError:  # pragma: no cover - defensive
             return ""
 
@@ -466,7 +470,7 @@ class Agent:
             )
         return effective
 
-    def _build_request(self, prompt: str) -> ChatRequest:
+    def _build_request(self, prompt: "str | list[dict[str, Any]]") -> ChatRequest:
         messages: List[ChatMessage] = []
         if self.instructions:
             messages.append(ChatMessage(role="system", content=self.instructions))
@@ -481,7 +485,7 @@ class Agent:
 
     async def arun(
         self,
-        prompt: str,
+        prompt: "str | list[dict[str, Any]]",
         *,
         tenant_id: Optional[str] = None,
         max_turns: int = 10,
@@ -508,7 +512,7 @@ class Agent:
 
     def run(
         self,
-        prompt: str,
+        prompt: "str | list[dict[str, Any]]",
         *,
         tenant_id: Optional[str] = None,
         max_turns: int = 10,
@@ -529,7 +533,7 @@ class Agent:
 
     async def astream(
         self,
-        prompt: str,
+        prompt: "str | list[dict[str, Any]]",
         *,
         tenant_id: Optional[str] = None,
         max_turns: int = 1,

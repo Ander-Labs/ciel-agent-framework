@@ -110,7 +110,7 @@ class TeamsAdapter(MessagingAdapter):
                 "TeamsAdapter requires webhook_url to send (Incoming Webhook URL)."
             )
         client = self._get_client()
-        payload = {"text": message.content}
+        payload = {"text": message.text()}
         # httpx.AsyncClient.post o un mock con la misma firma.
         resp = await client.post(self.webhook_url, json=payload)
         # Si el cliente es un mock sin status_code, no validamos.

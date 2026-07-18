@@ -168,7 +168,7 @@ def create_webui_router(
         return {
             "status": "ok",
             "id": message.id,
-            "content": message.content,
+            "content": message.text(),
             "sender": message.sender,
             "metadata": message.metadata,
         }

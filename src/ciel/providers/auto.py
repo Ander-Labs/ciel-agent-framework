@@ -16,7 +16,9 @@ from __future__ import annotations
 import os
 from typing import Optional, Tuple
 
-from ciel.providers import ChatProvider
+from ciel.providers import ChatProvider, OpenAICompatibleProvider
+from ciel.providers.azure import AzureOpenAIProvider
+
 
 # Model id prefixes -> (env var holding the API key, provider label).
 _MODEL_PREFIXES: Tuple[Tuple[str, str, str], ...] = (
@@ -26,6 +28,12 @@ _MODEL_PREFIXES: Tuple[Tuple[str, str, str], ...] = (
     ("claude-", "ANTHROPIC_API_KEY", "anthropic"),
     ("gemini-", "GEMINI_API_KEY", "gemini"),
     ("models/", "GEMINI_API_KEY", "gemini"),
+    # Azure OpenAI deployments commonly carry an "azure/" prefix.
+    ("azure/", "AZURE_OPENAI_API_KEY", "azure"),
+    # Ollama local models use an "ollama/" prefix and talk OpenAI-compatible.
+    ("ollama/", "OLLAMA_API_KEY", "ollama"),
+    # vLLM / TGI self-hosted OpenAI-compatible endpoints use a "vllm/" prefix.
+    ("vllm/", "VLLM_API_KEY", "vllm"),
 )
 
 
@@ -41,7 +49,9 @@ def _resolve_prefix(model: str) -> Optional[str]:
 def _default_base_url(label: str) -> Optional[str]:
     if label == "openai":
         return "https://api.openai.com/v1"
-    # Anthropic / Gemini providers carry their own default base_url.
+    if label == "ollama":
+        return "http://localhost:11434/v1"
+    # Anthropic / Gemini / Azure / vLLM providers carry their own default base_url.
     return None
 
 
@@ -52,7 +62,10 @@ def auto_provider(model: Optional[str]) -> ChatProvider:
       1. ``gpt-*`` / ``o1*`` / ``o3*``  -> OpenAI-compatible (reads ``OPENAI_API_KEY``)
       2. ``claude-*``                   -> Anthropic (reads ``ANTHROPIC_API_KEY``)
       3. ``gemini-*`` / ``models/*``    -> Gemini (reads ``GEMINI_API_KEY``)
-      4. otherwise                      -> OpenAI-compatible with no key
+      4. ``azure/*``                    -> Azure OpenAI (reads ``AZURE_OPENAI_API_KEY``)
+      5. ``ollama/*``                   -> Ollama local, OpenAI-compatible (localhost:11434)
+      6. ``vllm/*``                     -> vLLM/TGI self-hosted, OpenAI-compatible
+      7. otherwise                      -> OpenAI-compatible with no key
          (so ``gpt-`` style ids keep working; other ids fail at call time with a
          clear provider error rather than a silent misconfiguration)
 
@@ -63,7 +76,6 @@ def auto_provider(model: Optional[str]) -> ChatProvider:
         label = "openai"
 
     if label == "anthropic":
-        # Local import avoids a hard dependency at module import time.
         from ciel.providers import AnthropicProvider
 
         return AnthropicProvider(api_key=os.environ.get("ANTHROPIC_API_KEY"))
@@ -73,9 +85,32 @@ def auto_provider(model: Optional[str]) -> ChatProvider:
 
         return GeminiProvider(api_key=os.environ.get("GEMINI_API_KEY"))
 
-    # openai-compatible (default)
-    from ciel.providers import OpenAICompatibleProvider
+    if label == "azure":
+        deployment = model[len("azure/"):] if model else None
+        return AzureOpenAIProvider(
+            base_url=os.environ.get("AZURE_OPENAI_ENDPOINT", "https://<resource>.openai.azure.com"),
+            api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
+            deployment=deployment,
+        )
 
+    if label == "ollama":
+        model_id = model[len("ollama/"):] if model else None
+        return OpenAICompatibleProvider(
+            base_url="http://localhost:11434/v1",
+            api_key=os.environ.get("OLLAMA_API_KEY"),
+            default_model=model_id,
+        )
+
+    if label == "vllm":
+        model_id = model[len("vllm/"):] if model else None
+        base_url = os.environ.get("VLLM_BASE_URL", "http://localhost:8000/v1")
+        return OpenAICompatibleProvider(
+            base_url=base_url,
+            api_key=os.environ.get("VLLM_API_KEY"),
+            default_model=model_id,
+        )
+
+    # openai-compatible (default)
     base_url = _default_base_url("openai")
     return OpenAICompatibleProvider(
         base_url=base_url,  # type: ignore[arg-type]

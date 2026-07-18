@@ -70,6 +70,16 @@ class ProviderFactory:
     @staticmethod
     def from_config(config: ProviderConfig) -> ChatProvider:
         normalized = config.base_url.rstrip("/")
+        if config.name == "litellm":
+            from ciel.providers.litellm import LiteLLMProvider
+
+            return LiteLLMProvider(
+                model=config.default_model or "gpt-4o-mini",
+                api_key=config.api_key,
+                api_base=config.base_url if config.base_url else None,
+                tenant=config.tenant,
+                timeout=config.timeout,
+            )
         if normalized.endswith("/v1") or "openai" in normalized:
             return OpenAICompatibleProvider(
                 base_url=normalized,
@@ -96,8 +106,29 @@ class _ChatResponse:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
+def _normalize_content_parts(content: Any) -> List[Dict[str, Any]]:
+    """Normalize ``str | list[dict]`` content to OpenAI content-parts.
+
+    - ``str`` -> ``[{"type": "text", "text": <content>}]``
+    - ``list`` -> validated list of part dicts (text/image_url/input_audio/...),
+      tolerating a bare ``{"text": ...}`` part by promoting it to a text part.
+    """
+    if isinstance(content, str):
+        return [{"type": "text", "text": content}]
+    if isinstance(content, list):
+        parts: List[Dict[str, Any]] = []
+        for part in content:
+            if isinstance(part, dict):
+                if "type" not in part and "text" in part:
+                    part = {"type": "text", "text": part["text"]}
+                parts.append(part)
+        return parts
+    return [{"type": "text", "text": ""}]
+
+
 def _serialize_chat_message(message: Dict[str, Any]) -> Dict[str, Any]:
-    payload: Dict[str, Any] = {"role": message["role"], "content": message.get("content", "") or ""}
+    content = message.get("content", "")
+    payload: Dict[str, Any] = {"role": message["role"], "content": _normalize_content_parts(content)}
     name = message.get("name")
     if name:
         payload["name"] = name
@@ -111,6 +142,56 @@ def _build_chat_message(payload: Dict[str, Any]) -> _ChatMessage:
         name=payload.get("name"),
         metadata=payload.get("metadata", {}),
     )
+
+
+def _anthropic_content(content: Any) -> List[Dict[str, Any]]:
+    """Normalize ``str | list[dict]`` content to Anthropic content blocks.
+
+    - ``str`` -> ``[{"type": "text", "text": <content>}]``
+    - ``list`` -> maps each part to Anthropic blocks:
+        * ``{"type": "text", "text": ...}`` -> text block
+        * ``{"type": "image_url", "image_url": {"url": "data:..."}}`` ->
+          ``{"type": "image", "source": {"type": "base64", "media_type": ...,
+          "data": <b64>}}`` (only data-URLs are supported by the API)
+    """
+    if isinstance(content, str):
+        return [{"type": "text", "text": content}]
+    if not isinstance(content, list):
+        return [{"type": "text", "text": ""}]
+    blocks: List[Dict[str, Any]] = []
+    for part in content:
+        if not isinstance(part, dict):
+            continue
+        ptype = part.get("type")
+        if ptype == "text":
+            text = part.get("text", "")
+            if isinstance(text, str):
+                blocks.append({"type": "text", "text": text})
+        elif ptype == "image_url":
+            url = (part.get("image_url") or {}).get("url", "")
+            media_type, data = _split_data_url(url)
+            if media_type is not None and data is not None:
+                blocks.append(
+                    {
+                        "type": "image",
+                        "source": {"type": "base64", "media_type": media_type, "data": data},
+                    }
+                )
+    return blocks or [{"type": "text", "text": ""}]
+
+
+def _split_data_url(url: str) -> Tuple[Optional[str], Optional[str]]:
+    """Split a ``data:<mime>;base64,<data>`` URL into (mime, b64)."""
+    if not isinstance(url, str) or not url.startswith("data:"):
+        return None, None
+    try:
+        meta, data = url[5:].split(",", 1)
+    except ValueError:
+        return None, None
+    if ";base64" not in meta:
+        return None, None
+    mime = meta.split(";base64", 1)[0] or "application/octet-stream"
+    return mime, data
 
 
 class OpenAICompatibleProvider(ChatProvider):
@@ -130,6 +211,10 @@ class OpenAICompatibleProvider(ChatProvider):
         self.default_model = default_model
         self.timeout = timeout
         self.tenant = tenant
+
+    def _client_ctx(self):
+        """Context manager yielding an ``httpx.AsyncClient`` for this provider."""
+        return httpx.AsyncClient(base_url=self.base_url, timeout=self.timeout)
 
     async def complete(self, request: "ChatRequest") -> "ChatResponse":
         model = request.model or self.default_model or "unknown"
@@ -266,7 +351,7 @@ class AnthropicProvider(ChatProvider):
             "anthropic-version": "2023-06-01",
         }
         messages = [
-            {"role": message.role, "content": message.content or ""}
+            {"role": message.role, "content": _anthropic_content(message.content)}
             for message in request.messages
         ]
         payload = {
@@ -304,3 +389,11 @@ class AnthropicProvider(ChatProvider):
                 if isinstance(text, str):
                     return text
         return ""
+
+
+# LiteLLM meta-provider is an optional extra; import it lazily so the core
+# providers module stays usable without the heavy ``litellm`` dependency.
+try:  # pragma: no cover - depends on extras install
+    from ciel.providers.litellm import LiteLLMProvider
+except ImportError:
+    LiteLLMProvider = None  # type: ignore[assignment]
