@@ -50,23 +50,25 @@ def test_write_file_raises_when_blocked() -> None:
         ctx.write_file("/tmp/out.txt", "hello")
 
 
-def test_read_file_allowed_by_default() -> None:
+def test_read_file_allowed_by_default(tmp_path) -> None:
     ctx = SandboxContext()
-    result = ctx.read_file("/tmp/out.txt")
-    assert "/tmp/out.txt" in result
+    target = tmp_path / "out.txt"
+    target.write_text("hello-real", encoding="utf-8")
+    result = ctx.read_file(str(target))
+    assert result == "hello-real"
 
 
-def test_execute_stub_returns_mocked_output_when_allowed() -> None:
+def test_execute_runs_real_command_when_allowed() -> None:
     policy = SandboxPolicy(allow_terminal=True)
     ctx = SandboxContext(policy=policy)
-    result = ctx.execute("echo", {"text": "ciel"})
-    assert "echo" in result
+    result = ctx.execute("echo", {"args": ["ciel"]})
     assert "ciel" in result
 
 
-def test_file_write_stub_returns_mocked_output_when_allowed() -> None:
+def test_file_write_writes_real_file_when_allowed(tmp_path) -> None:
     policy = SandboxPolicy(allow_file_write=True)
     ctx = SandboxContext(policy=policy)
-    result = ctx.write_file("/tmp/out.txt", "hello")
-    assert "/tmp/out.txt" in result
-    assert "hello" in result or "5" in result
+    target = tmp_path / "out.txt"
+    result = ctx.write_file(str(target), "hello")
+    assert str(target) in result
+    assert target.read_text(encoding="utf-8") == "hello"

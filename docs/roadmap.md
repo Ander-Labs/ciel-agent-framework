@@ -101,7 +101,7 @@ Dashboard mínimo operativo y observabilidad visual:
 - Runbooks operativos completos (despliegue, incidente, rollback, backup, HPA)
   y `BackupJob` (CronJob) en el chart Helm.
 
-### v0.9 — 📋 Enterprise reforzado
+### v0.9 — ✅ Disponible (Enterprise reforzado)
 
 - **SSO/OIDC** con proveedor real (no solo verificación local de JWT).
 - **Vault** para secretos dinámicos y rotación.

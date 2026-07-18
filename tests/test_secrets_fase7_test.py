@@ -101,7 +101,7 @@ def test_vault_feature_detection() -> None:
 
         class _FakeSecrets:
             def __init__(self):
-                self.kv = _FakeKV()
+                self.kv = type("_KV", (), {"v2": _FakeKV()})()
 
         class _FakeClient:
             def __init__(self, *a, **k):

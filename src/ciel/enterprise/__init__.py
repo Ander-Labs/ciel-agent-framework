@@ -24,12 +24,15 @@ from ciel.enterprise.rbac import (
     RBACEngine,
     RBACError,
     Role,
+    map_oidc_claims_to_role,
 )
 from ciel.enterprise.ratelimit import RateLimitError, TenantRateLimiter
 from ciel.enterprise.secrets import (
     EnvSecretBackend,
     FeatureUnavailable as SecretsFeatureUnavailable,
     KubernetesSecretBackend,
+    LeasedSecret,
+    RotatingSecretStore,
     SecretError,
     SecretStore,
     VaultSecretBackend,
@@ -44,6 +47,7 @@ __all__ = [
     "DEFAULT_ROLES",
     "RBACEngine",
     "OIDCVerifier",
+    "map_oidc_claims_to_role",
     # audit
     "HashChainAuditSink",
     # cost
@@ -57,6 +61,8 @@ __all__ = [
     "KubernetesSecretBackend",
     "VaultSecretBackend",
     "SecretStore",
+    "LeasedSecret",
+    "RotatingSecretStore",
     # ratelimit
     "RateLimitError",
     "TenantRateLimiter",

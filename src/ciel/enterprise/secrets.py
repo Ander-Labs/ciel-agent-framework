@@ -16,8 +16,11 @@ No secret is ever hard-coded here.
 from __future__ import annotations
 
 import os
+import threading
+import time
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 try:  # pragma: no cover - exercised through import machinery
     import hvac  # type: ignore
@@ -34,6 +37,28 @@ class SecretError(Exception):
 
 class FeatureUnavailable(Exception):
     """Raised when an optional backend's dependency is missing."""
+
+
+@dataclass
+class LeasedSecret:
+    """A secret obtained from a dynamic backend with an associated lease.
+
+    ``lease_id`` is ``None`` for static (KV) secrets — those never expire and
+    take the plain static resolution path. Dynamic engines populate ``lease_id``,
+    ``ttl`` and ``expires_at`` so the store can renew/revoke before expiry.
+    """
+
+    name: str
+    value: str
+    lease_id: Optional[str] = None
+    ttl: Optional[float] = None
+    expires_at: Optional[float] = None
+    renewable: bool = False
+
+    def is_expired(self, *, now: Optional[float] = None, skew: float = 0.0) -> bool:
+        if self.expires_at is None:
+            return False
+        return (now if now is not None else time.time()) >= (self.expires_at - skew)
 
 
 def _k8s_filename(name: str) -> str:
@@ -128,6 +153,56 @@ class VaultSecretBackend:
         value = data.get(name)
         return value if isinstance(value, str) else (None if value is None else str(value))
 
+    def get_lease(self, name: str, *, mount_point: Optional[str] = None) -> Optional[LeasedSecret]:
+        """Read a *dynamic* secret from Vault, returning a :class:`LeasedSecret`.
+
+        Uses Vault's generic ``read`` on the given path, which returns a
+        ``lease_id``/``lease_duration``/``renewable`` envelope for dynamic
+        secret engines (database, aws, ...). Falls back to a static
+        :class:`LeasedSecret` (``lease_id=None``) when the path is a KV secret
+        with no lease. Returns ``None`` when the secret cannot be resolved.
+        """
+        client = self._resolve_client()
+        path = name if mount_point is None else f"{mount_point}/{name}"
+        try:
+            resp = client.read(path)
+        except FeatureUnavailable:
+            raise
+        except Exception:
+            return None
+        if not resp:
+            return None
+        data = resp.get("data") or {}
+        # dynamic engines expose the value under a well-known key or the whole map
+        value = data.get(name)
+        if value is None and len(data) == 1:
+            value = next(iter(data.values()))
+        if value is None:
+            return None
+        value = value if isinstance(value, str) else str(value)
+        lease_id = resp.get("lease_id") or None
+        ttl = resp.get("lease_duration")
+        ttl = float(ttl) if ttl else None
+        expires_at = (time.time() + ttl) if ttl else None
+        return LeasedSecret(
+            name=name,
+            value=value,
+            lease_id=lease_id,
+            ttl=ttl,
+            expires_at=expires_at,
+            renewable=bool(resp.get("renewable", False)),
+        )
+
+    def revoke_lease(self, lease_id: str) -> None:
+        """Best-effort revocation of a Vault lease (no-op if it fails)."""
+        if not lease_id:
+            return
+        client = self._resolve_client()
+        try:
+            client.sys.revoke_lease(lease_id=lease_id)
+        except Exception:
+            pass
+
 
 class SecretStore:
     """Aggregate several backends and resolve by priority order.
@@ -154,3 +229,100 @@ class SecretStore:
         if value is None:
             raise SecretError(f"required secret not found: {name}")
         return value
+
+
+class RotatingSecretStore:
+    """Resolve secrets that may expire, with lease-aware caching and rotation.
+
+    Wraps a *dynamic* backend (must expose ``get_lease(name) -> LeasedSecret``,
+    e.g. :class:`VaultSecretBackend`) and, optionally, a *static* fallback
+    backend (anything with ``get(name) -> str | None``, e.g.
+    :class:`EnvSecretBackend`).  Resolution rules:
+
+    * A cached, non-expired :class:`LeasedSecret` is returned immediately.
+    * On expiry (or first access) the dynamic backend is queried again; the old
+      lease is revoked first (best-effort) to avoid lease leaks.
+    * Static secrets (``lease_id is None``) are cached without a refresh timer.
+    * On any dynamic-backend failure the store degrades to the last-known-good
+      cached value, and then to the static fallback backend — never raising for
+      transient network errors (offline-safe).
+
+    ``resolve`` is call-time safe (thread-locked); consumers should call it on
+    every use instead of caching the string, so rotation actually takes effect.
+    """
+
+    def __init__(
+        self,
+        dynamic_backend,
+        *,
+        fallback_backend=None,
+        refresh_ratio: float = 0.75,
+        clock: Callable[[], float] = time.time,
+    ) -> None:
+        self._dynamic = dynamic_backend
+        self._fallback = fallback_backend
+        self._refresh_ratio = refresh_ratio
+        self._clock = clock
+        self._cache: dict[str, LeasedSecret] = {}
+        self._lock = threading.RLock()
+
+    def _needs_refresh(self, leased: LeasedSecret) -> bool:
+        if leased.lease_id is None or leased.expires_at is None or leased.ttl is None:
+            return False  # static secret: never auto-refresh
+        # refresh proactively once refresh_ratio of the TTL has elapsed
+        threshold = leased.expires_at - leased.ttl * (1.0 - self._refresh_ratio)
+        return self._clock() >= threshold
+
+    def resolve(self, name: str) -> Optional[str]:
+        with self._lock:
+            cached = self._cache.get(name)
+            if cached is not None and not self._needs_refresh(cached):
+                return cached.value
+
+            # Try to (re)fetch from the dynamic backend.
+            try:
+                fresh = self._dynamic.get_lease(name)
+            except FeatureUnavailable:
+                raise
+            except Exception:
+                fresh = None
+
+            if fresh is not None:
+                # revoke the previous lease before swapping (avoid lease leaks)
+                if cached is not None and cached.lease_id and cached.lease_id != fresh.lease_id:
+                    self._revoke(cached.lease_id)
+                self._cache[name] = fresh
+                return fresh.value
+
+            # Dynamic backend failed → last-known-good, then static fallback.
+            if cached is not None:
+                return cached.value
+            if self._fallback is not None:
+                return self._fallback.get(name)
+            return None
+
+    def require(self, name: str) -> str:
+        value = self.resolve(name)
+        if value is None:
+            raise SecretError(f"required secret not found: {name}")
+        return value
+
+    def invalidate(self, name: str) -> None:
+        """Drop the cached value so the next ``resolve`` re-fetches."""
+        with self._lock:
+            self._cache.pop(name, None)
+
+    def revoke(self, name: str) -> None:
+        """Revoke and drop the lease for *name* (dynamic secrets only)."""
+        with self._lock:
+            cached = self._cache.pop(name, None)
+        if cached is not None and cached.lease_id:
+            self._revoke(cached.lease_id)
+
+    def _revoke(self, lease_id: str) -> None:
+        revoke = getattr(self._dynamic, "revoke_lease", None)
+        if callable(revoke):
+            try:
+                revoke(lease_id)
+            except Exception:
+                pass

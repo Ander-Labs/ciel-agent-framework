@@ -4,6 +4,60 @@ All notable changes to this project will be documented in this file.
 
 Dates use release date. Versions follow SemVer with initial pre-release `0.1.0`.
 
+## [0.9.0] — Fase 15 (Enterprise reforzado) — 2026-07-17
+
+Refuerza la capa enterprise con tres pilares de seguridad, todos **offline-safe
+por defecto** (OIDC real, Vault dinámico y sandbox fuerte son opt-in vía
+config/env; sin red/IdP/Vault/Docker el comportamiento previo se mantiene).
+Corresponde a **v0.9 — Enterprise reforzado** del roadmap. Retrocompatibilidad
+total: no cambia la API pública ni la verificación local de JWT ni la
+abstracción de secretos existente. Baseline de tests: 390 passed / 7 skipped.
+
+### F-OIDC — SSO/OIDC con proveedor real
+- **`OIDCVerifier` extendido** (`ciel.enterprise.rbac`): además del modo local
+  (clave estática, retrocompat Fase 7), añade modo **JWKS** opt-in con discovery
+  `.well-known/openid-configuration`, fetch/caché de JWKS por `kid` (TTL +
+  refresh on `kid` desconocido) y validación estricta de `iss`/`aud`/`exp`/`alg`
+  (solo RS/ES asimétricos; rechaza `none`/`HS256` en modo JWKS).
+- **`OIDCVerifier.from_config()`** lee `CIEL_OIDC_*` (`ISSUER`, `AUDIENCE`,
+  `JWKS_URI`, `ROLE_CLAIM`, `ROLE_MAPPING`); `enabled_from_env()` mira
+  `CIEL_OIDC_ENABLED` (default off).
+- **`map_oidc_claims_to_role()`**: mapeo configurable de claims → rol RBAC con
+  defaults para Keycloak (`realm_access.roles`), Auth0/genérico (`roles`),
+  Azure AD/Okta (`groups`). Fail-closed: sin match ⇒ sin rol.
+- **`make_oidc_dependency()`** (`ciel.gateway.auth`): dependency FastAPI que
+  delega a la guard api_key cuando OIDC está off (open-mode por defecto) y exige
+  Bearer JWT válido cuando está on, devolviendo un `AuthContext`
+  (`subject`/`role`/`claims`/`via`).
+- Nuevo extra `oidc = ["PyJWT[crypto]", "authlib", "python-multipart"]`.
+
+### F-Vault — Secretos dinámicos y rotación
+- **`LeasedSecret`** dataclass (`name`/`value`/`lease_id`/`ttl`/`expires_at`/
+  `renewable`) con `is_expired()`.
+- **`VaultSecretBackend.get_lease()`** para engines dinámicos (database/aws/...)
+  vía `client.read`, y **`revoke_lease()`** best-effort. La ruta KV estática
+  sigue igual (`lease_id=None`).
+- **`RotatingSecretStore`**: caché lease-aware con refresh proactivo (default al
+  75% del TTL), revocación del lease previo al rotar (evita fugas), y
+  degradación a last-known-good y a un backend estático (env) ante fallo de red.
+  `resolve()`/`require()`/`invalidate()`/`revoke()` thread-safe (call-time).
+- Nuevo extra `vault = ["hvac>=2.0"]`.
+
+### F-Sandbox — Guardrails + sandbox de ejecución
+- **`SandboxExecutor`** con backends seleccionables (`SandboxBackend`):
+  `INPROCESS` (default cross-platform, `subprocess` + timeout), `LIGHT` (Linux,
+  `setrlimit` CPU/mem; degrada a inprocess en Windows), `DOCKER` (opt-in:
+  `--network=none --read-only --cap-drop=ALL --security-opt=no-new-privileges
+  --memory --pids-limit --rm`) y `GVISOR` (opt-in, runtime `runsc`). Degradación
+  graceful con log: backend fuerte no disponible ⇒ fallback a inprocess.
+- **`SandboxLimits`** (timeout/cpu/mem/pids/network) y **`ExecResult`** con
+  telemetría (`backend`, `duration_ms`, `limits_applied`, `timed_out`).
+- **`GuardrailMiddleware`**: rate-limit por tenant (reusa `TenantRateLimiter`),
+  redacción de secretos en salida (reusa `redact_string`) y truncado.
+- **`SandboxContext` ahora ejecuta de verdad**: `execute`/`read_file`/
+  `write_file` reemplazan los antiguos stubs por ejecución real respaldada por
+  `SandboxExecutor` (respetando la política de guardrails).
+
 ## [0.8.0] — Fase 14 (Escala y HA real) — 2026-07-17
 
 Hace que `ciel serve` sea **multi-réplica real** (N>=2 detrás de un balanceador)

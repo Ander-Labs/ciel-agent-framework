@@ -4,6 +4,8 @@ Firmas según FASE7_DESIGN.md sección 2.1.
 """
 from __future__ import annotations
 
+import os
+import time
 from dataclasses import dataclass, field
 from typing import Iterable, Optional
 
@@ -139,14 +141,213 @@ def _detect_oidc() -> bool:
         return False
 
 
+# Algoritmos asimétricos aceptados en modo JWKS. Se rechaza explícitamente
+# ``none`` y ``HS256`` cuando hay JWKS (mitiga alg-confusion).
+_JWKS_ALGORITHMS = ["RS256", "RS384", "RS512", "ES256", "ES384", "ES512"]
+
+# Mapeo por defecto de claims → rol para los IdP más comunes. El primer claim
+# presente decide; los valores se comparan contra ``role_mapping`` (case-insensitive).
+_DEFAULT_ROLE_CLAIMS = ("realm_access.roles", "roles", "groups")
+
+# Mapeo por defecto de valores de claim → rol RBAC de Ciel.
+_DEFAULT_ROLE_MAPPING = {
+    "admin": "admin",
+    "ciel-admin": "admin",
+    "administrator": "admin",
+    "operator": "operator",
+    "ciel-operator": "operator",
+    "editor": "operator",
+    "viewer": "viewer",
+    "ciel-viewer": "viewer",
+    "reader": "viewer",
+}
+
+
+def _dig(claims: dict, dotted: str):
+    """Extrae un valor de ``claims`` por ruta con puntos (p.ej. realm_access.roles)."""
+    cur = claims
+    for part in dotted.split("."):
+        if isinstance(cur, dict) and part in cur:
+            cur = cur[part]
+        else:
+            return None
+    return cur
+
+
+def map_oidc_claims_to_role(
+    claims: dict,
+    *,
+    role_claims: Iterable[str] = _DEFAULT_ROLE_CLAIMS,
+    role_mapping: Optional[dict] = None,
+) -> Optional[str]:
+    """Mapea los claims de un JWT OIDC a un rol RBAC de Ciel.
+
+    Recorre ``role_claims`` en orden; el primer claim presente cuyos valores
+    (str o lista) casen con ``role_mapping`` determina el rol. Devuelve ``None``
+    si ningún valor mapea (fail-closed: sin rol => sin permisos).
+
+    Soporta el formato de Keycloak (``realm_access.roles``), Auth0/genérico
+    (``roles``/``groups``), Azure AD (``roles``/``groups``) y Okta (``groups``).
+    """
+    mapping = {k.lower(): v for k, v in (role_mapping or _DEFAULT_ROLE_MAPPING).items()}
+    for claim in role_claims:
+        raw = _dig(claims, claim)
+        if raw is None:
+            continue
+        values = raw if isinstance(raw, (list, tuple, set)) else [raw]
+        for value in values:
+            if not isinstance(value, str):
+                continue
+            mapped = mapping.get(value.lower())
+            if mapped is not None:
+                return mapped
+    return None
+
+
 class OIDCVerifier:
+    """Verificador de tokens OIDC/JWT, offline-safe.
+
+    Dos modos de operación:
+
+    * **Local (por defecto)**: valida con una ``public_key`` estática (o secreto
+      HS256). Mantiene retrocompatibilidad total con la Fase 7.
+    * **JWKS (opt-in)**: descubre el ``jwks_uri`` del IdP (vía ``.well-known/
+      openid-configuration`` o URI explícita), cachea las claves JWKS, y valida
+      ``iss``/``aud``/``exp``/``alg``. Requiere ``httpx`` y ``PyJWT[crypto]``.
+
+    Todo el trabajo de red es perezoso: construir el verificador nunca hace
+    peticiones. Si faltan las deps, ``verify`` lanza ``FeatureUnavailable``.
+    """
+
     OIDC_AVAILABLE: bool = _detect_oidc()
 
-    def __init__(self, *, issuer=None, audience=None, jwks_uri=None, public_key=None):
+    def __init__(
+        self,
+        *,
+        issuer=None,
+        audience=None,
+        jwks_uri=None,
+        public_key=None,
+        role_claims: Optional[Iterable[str]] = None,
+        role_mapping: Optional[dict] = None,
+        jwks_cache_ttl: float = 3600.0,
+        http_client=None,
+    ):
         self.issuer = issuer
         self.audience = audience
         self.jwks_uri = jwks_uri
         self.public_key = public_key
+        self.role_claims = tuple(role_claims) if role_claims else _DEFAULT_ROLE_CLAIMS
+        self.role_mapping = role_mapping
+        self.jwks_cache_ttl = jwks_cache_ttl
+        self._http_client = http_client
+        # cache: {kid: signing_key}
+        self._jwks_cache: dict = {}
+        self._jwks_fetched_at: float = 0.0
+
+    @classmethod
+    def from_config(cls, config: Optional[dict] = None) -> "OIDCVerifier":
+        """Construye un verificador desde dict/env.
+
+        Precedencia: valores explícitos en ``config`` > variables de entorno
+        ``CIEL_OIDC_*``. Devuelve un verificador siempre (offline-safe); solo
+        ``verify`` fallará si faltan deps o no hay clave/JWKS.
+        """
+        cfg = dict(config or {})
+
+        def pick(key, env, default=None):
+            if key in cfg and cfg[key] is not None:
+                return cfg[key]
+            return os.getenv(env, default)
+
+        role_mapping = cfg.get("role_mapping")
+        if role_mapping is None:
+            raw = os.getenv("CIEL_OIDC_ROLE_MAPPING")
+            if raw:
+                # formato "claimvalue:role,claimvalue2:role2"
+                role_mapping = {}
+                for pair in raw.split(","):
+                    if ":" in pair:
+                        k, v = pair.split(":", 1)
+                        role_mapping[k.strip()] = v.strip()
+
+        role_claim = pick("role_claim", "CIEL_OIDC_ROLE_CLAIM")
+        role_claims = cfg.get("role_claims")
+        if role_claims is None and role_claim:
+            role_claims = [role_claim]
+
+        return cls(
+            issuer=pick("issuer", "CIEL_OIDC_ISSUER"),
+            audience=pick("audience", "CIEL_OIDC_AUDIENCE"),
+            jwks_uri=pick("jwks_uri", "CIEL_OIDC_JWKS_URI"),
+            public_key=cfg.get("public_key"),
+            role_claims=role_claims,
+            role_mapping=role_mapping,
+        )
+
+    @staticmethod
+    def enabled_from_env() -> bool:
+        """True si OIDC real está activado por env (``CIEL_OIDC_ENABLED``)."""
+        return os.getenv("CIEL_OIDC_ENABLED", "").strip().lower() in {"1", "true", "yes", "on"}
+
+    def _client(self):
+        if self._http_client is not None:
+            return self._http_client
+        import httpx  # type: ignore
+
+        return httpx.Client(timeout=10.0)
+
+    def _discover_jwks_uri(self) -> str:
+        if self.jwks_uri:
+            return self.jwks_uri
+        if not self.issuer:
+            raise FeatureUnavailable("OIDC JWKS: falta 'issuer' o 'jwks_uri'")
+        well_known = self.issuer.rstrip("/") + "/.well-known/openid-configuration"
+        client = self._client()
+        resp = client.get(well_known)
+        resp.raise_for_status()
+        uri = resp.json().get("jwks_uri")
+        if not uri:
+            raise FeatureUnavailable("OIDC discovery no expone 'jwks_uri'")
+        self.jwks_uri = uri
+        return uri
+
+    def _get_signing_key(self, token: str):
+        """Obtiene la clave de firma para el ``kid`` del token, con cache/refresh."""
+        import jwt  # type: ignore
+
+        now = time.time()
+        header = jwt.get_unverified_header(token)
+        kid = header.get("kid")
+
+        cache_valid = (now - self._jwks_fetched_at) < self.jwks_cache_ttl
+        if not cache_valid or (kid and kid not in self._jwks_cache):
+            self._refresh_jwks()
+
+        if kid is None:
+            # Sin kid: si hay una sola clave, úsala.
+            if len(self._jwks_cache) == 1:
+                return next(iter(self._jwks_cache.values()))
+            raise FeatureUnavailable("token sin 'kid' y JWKS con múltiples claves")
+        key = self._jwks_cache.get(kid)
+        if key is None:
+            raise FeatureUnavailable(f"'kid' desconocido en JWKS: {kid}")
+        return key
+
+    def _refresh_jwks(self) -> None:
+        from jwt import PyJWKClient  # type: ignore
+
+        uri = self._discover_jwks_uri()
+        jwk_client = PyJWKClient(uri)
+        # PyJWKClient maneja su propia cache; almacenamos por kid para el guard.
+        jwks = jwk_client.get_jwk_set()
+        cache = {}
+        for key in jwks.keys:
+            if key.key_id:
+                cache[key.key_id] = key.key
+        self._jwks_cache = cache
+        self._jwks_fetched_at = time.time()
+        self._jwk_client = jwk_client
 
     def verify(self, token: str) -> dict:
         if not self.OIDC_AVAILABLE:
@@ -155,6 +356,21 @@ class OIDCVerifier:
             )
         import jwt  # type: ignore
 
+        # Modo JWKS (opt-in): hay jwks_uri o (issuer sin public_key local).
+        use_jwks = bool(self.jwks_uri) or (self.issuer and self.public_key is None)
+        if use_jwks:
+            signing_key = self._get_signing_key(token)
+            claims = jwt.decode(
+                token,
+                signing_key,
+                algorithms=_JWKS_ALGORITHMS,
+                audience=self.audience,
+                issuer=self.issuer,
+                options={"verify_aud": self.audience is not None},
+            )
+            return claims
+
+        # Modo local (retrocompat Fase 7).
         options = {"verify_aud": self.audience is not None}
         claims = jwt.decode(
             token,
@@ -165,3 +381,17 @@ class OIDCVerifier:
             options=options,
         )
         return claims
+
+    def verify_and_map_role(self, token: str) -> tuple[dict, Optional[str]]:
+        """Verifica el token y devuelve ``(claims, rol_rbac)``.
+
+        El ``subject`` para RBAC es ``claims['sub']``. El rol se deriva vía
+        :func:`map_oidc_claims_to_role` con la config del verificador.
+        """
+        claims = self.verify(token)
+        role = map_oidc_claims_to_role(
+            claims,
+            role_claims=self.role_claims,
+            role_mapping=self.role_mapping,
+        )
+        return claims, role
