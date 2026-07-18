@@ -52,8 +52,8 @@ Bajar la curva de adopción para nuevos usuarios:
 ### v0.6 — ✅ Disponible (Autonomía I: Skill Library)
 
 > **Nota:** la *Autonomía I (Skill Library)* estaba originalmente planeada para
-> la v1.2 del roadmap. Se adelantó y se entregó en la v0.6.0, por lo que todo el
-> resto de hitos se renumera +1 (ver abajo).
+> la v0.12 del roadmap (cuando las fases se numeraban como v1.x). Se adelantó y se
+> entregó en la v0.6.0, por lo que todo el resto de hitos se renumera +1 (ver abajo).
 
 Primer nivel de autonía: el agente **crea, verifica, versiona y enseña** sus
 propios skills, todo offline-safe (sin red ni API keys):
@@ -107,52 +107,57 @@ Dashboard mínimo operativo y observabilidad visual:
 - **Vault** para secretos dinámicos y rotación.
 - **Guardrails** + sandbox de ejecución de código del agente (Docker/gVisor).
 
-### v1.0 — 📋 Providers y multimodal
+### v0.10 — 📋 Providers y multimodal
 
 - **LiteLLM** como meta-provider (100+ modelos), fallback y balanceo.
 - Providers clave: Anthropic, Azure OpenAI, Gemini, Ollama (local), vLLM/TGI.
 - **Multimodal** nativo (visión/audio/video).
 
-### v1.1 — 📋 Memoria, RAG y conocimiento
+### v0.11 — 📋 Memoria, RAG y conocimiento
 
 - Memoria avanzada (episódica + semántica) y RAG listo para enterprise
   (plantillas, hybrid search, re-ranking, document loaders, caché semántico).
 
-### v1.2 — 📋 Evaluación y testing
+### v0.12 — 📋 Evaluación y testing
 
 - `ciel evaluate` (DeepEval/RAGAS/TruLens), KPIs, MockModel, CI actions,
   red-teaming y regression testing.
 
-### v1.3 — 📋 Autonomía II: auto-aprendizaje
+### v0.13 — 📋 Autonomía II: auto-aprendizaje
 
 - Self-reflection y learning-from-failure; **prompt evolution** versionado;
   introspección y estado cognitivo explicable.
 
-### v1.4 — 📋 Autonomía III: curricula y exploración
+### v0.14 — 📋 Autonomía III: curricula y exploración
 
 - Autonomous goal setting + curriculum; knowledge graph y transfer learning
   entre dominios.
 
-### v1.5 — 📋 Inteligencia colectiva
+### v0.15 — 📋 Inteligencia colectiva
 
 - Cross-agent knowledge transfer; composición y marketplace de skills;
   skill evolution tree y métricas de velocidad de aprendizaje.
 
-### v1.6 — 📋 APIs multi-lenguaje y despliegue moderno
+### v0.16 — 📋 APIs multi-lenguaje y despliegue moderno
 
 - API REST/gRPC para exponer agentes; SDKs (TS/Go/Java/Rust); IaC y GitOps.
 
-### v1.7 — 📋 Observability GA y multi-cloud
+### v0.17 — 📋 Observability GA y multi-cloud
 
 - OTel a collector real con dashboards/alertas; integraciones (LangFuse, W&B,
   DataDog, PagerDuty); multi-cloud sin vendor lock-in.
 
-### v1.8 — 📋 API stability y ecosistema
+### v0.18 — 📋 API stability y ecosistema
 
 - API pública estable (semver + deprecación); ecosistema de plugins, galería de
   templates, docs bilingüe (es/en), benchmark público.
 
-### v2.0 — 📋 GA (meta-agente)
+### v1.0 — 📋 GA / Madurez (meta-agente)
+
+> **v1.0.0 se reserva para la madurez real del framework.** No se lanzará la
+> versión 1 hasta completar todas las fases previas (v0.10–v0.18) y considerar
+> que Ciel es un framework maduro y apto para producción a nivel GA. Todas las
+> versiones intermedias son `0.x` (pre-1.0).
 
 - Meta-agentes que eligen estrategia y auto-optimizan su aprendizaje; límites de
   seguridad autónomos que evolucionan con la experiencia; compliance automático

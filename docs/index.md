@@ -99,6 +99,13 @@ print(resp.text)
   con lease anti-doble-ejecución para N réplicas.
   [:octicons-arrow-right-24: Despliegue](guide/deploy.md)
 
+- :material-shield-lock: **Enterprise reforzado** (v0.9)
+  ---
+
+  SSO/OIDC con proveedor real (JWKS), Vault de secretos dinámicos con
+  rotación, y guardrails + sandbox de ejecución de código (Docker/gVisor).
+  [:octicons-arrow-right-24: Seguridad](api-reference/security.md)
+
 </div>
 
 ---
@@ -148,7 +155,7 @@ print(resp.text)
 |---|---|
 | **PyPI** | `mana-ciel` (import `ciel`) |
 | **Compatibilidad** | Python >= 3.11 |
-| **Versión actual** | `0.8.0` — Escala y HA real (StateBackend, `/healthz`, `/readyz`, resume con lease, backup) |
+| **Versión actual** | `0.9.0` — Enterprise reforzado (SSO/OIDC con JWKS, Vault dinámico con rotación, guardrails + sandbox de ejecución) |
 | **Repositorio** | <https://github.com/Ander-Labs/ciel-agent-framework> |
 | **Releases** | <https://github.com/Ander-Labs/ciel-agent-framework/releases> |
 | **Licencia** | AGPL-3.0-or-later (dual comercial disponible) |
