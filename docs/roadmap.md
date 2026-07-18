@@ -107,11 +107,25 @@ Dashboard mínimo operativo y observabilidad visual:
 - **Vault** para secretos dinámicos y rotación.
 - **Guardrails** + sandbox de ejecución de código del agente (Docker/gVisor).
 
-### v0.10 — 📋 Providers y multimodal
+### v0.10 — ✅ Disponible (Providers y multimodal)
 
-- **LiteLLM** como meta-provider (100+ modelos), fallback y balanceo.
-- Providers clave: Anthropic, Azure OpenAI, Gemini, Ollama (local), vLLM/TGI.
-- **Multimodal** nativo (visión/audio/video).
+Capa de providers ampliada y multimodal nativo:
+
+- **Multimodal nativo**: `ChatMessage.content` acepta `str | list[dict]`
+  (partes `text` / `image_url` / `input_audio`); nuevo helper
+  `ChatMessage.text()` degrada multimodal a texto concatenado.
+- **LiteLLM** como meta-provider (extra opcional `litellm`): instala con
+  `pip install "mana-ciel[litellm]"`; `LiteLLMProvider` expone 100+ modelos
+  vía el contrato `ChatProvider`, con `Router` para fallback/balanceo
+  (offline-safe, import diferido).
+- **Azure OpenAI**: `AzureOpenAIProvider` (deployment + api-version); prefijo
+  `azure/` en `auto_provider`.
+- **Ollama** local: prefijo `ollama/` → `OpenAICompatibleProvider` en
+  `http://localhost:11434/v1`.
+- **vLLM/TGI**: prefijo `vllm/` → `OpenAICompatibleProvider` en
+  `http://localhost:8000/v1` (configurable vía `VLLM_BASE_URL`).
+- `auto_provider` reconoce prefijos: `gpt-`/`o1`/`o3`→OpenAI, `claude-`→Anthropic,
+  `gemini-`/`models/`→Gemini, `azure/`→Azure, `ollama/`→Ollama, `vllm/`→vLLM.
 
 ### v0.11 — 📋 Memoria, RAG y conocimiento
 

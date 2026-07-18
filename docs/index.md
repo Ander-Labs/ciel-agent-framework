@@ -106,6 +106,14 @@ print(resp.text)
   rotación, y guardrails + sandbox de ejecución de código (Docker/gVisor).
   [:octicons-arrow-right-24: Seguridad](api-reference/security.md)
 
+- :material-connection: **Providers y multimodal** (v0.10)
+  ---
+
+  Multimodal nativo (`text`/`image_url`/`input_audio`), meta-provider
+  **LiteLLM** (100+ modelos), **Azure OpenAI**, **Ollama** local y **vLLM/TGI**
+  vía prefijos en `auto_provider` (`azure/`, `ollama/`, `vllm/`).
+  [:octicons-arrow-right-24: Providers](guide/providers.md)
+
 </div>
 
 ---
@@ -155,7 +163,7 @@ print(resp.text)
 |---|---|
 | **PyPI** | `mana-ciel` (import `ciel`) |
 | **Compatibilidad** | Python >= 3.11 |
-| **Versión actual** | `0.9.0` — Enterprise reforzado (SSO/OIDC con JWKS, Vault dinámico con rotación, guardrails + sandbox de ejecución) |
+| **Versión actual** | `0.10.0` — Providers y multimodal (multimodal nativo, meta-provider LiteLLM, Azure OpenAI, Ollama local, vLLM/TGI vía prefijos en `auto_provider`) |
 | **Repositorio** | <https://github.com/Ander-Labs/ciel-agent-framework> |
 | **Releases** | <https://github.com/Ander-Labs/ciel-agent-framework/releases> |
 | **Licencia** | AGPL-3.0-or-later (dual comercial disponible) |
