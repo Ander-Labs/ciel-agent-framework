@@ -7,6 +7,7 @@ except PackageNotFoundError:  # pragma: no cover
 
 from ciel.security import ApprovalPolicy
 from ciel.api import Agent, AgentResponse, Context, ToolFunction, skill, teach, tool
+from ciel.runtime.memory_episodic import EpisodicStore, MemoryConfig
 from ciel.studio import (
     StudioStore,
     create_studio_router,
@@ -53,4 +54,7 @@ __all__ = [
     "attach_cost_tracking",
     "get_cost_store",
     "create_cost_router",
+    # Fase 17 — Memoria episódica (v0.11.0)
+    "EpisodicStore",
+    "MemoryConfig",
 ]

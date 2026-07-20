@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import abc
 import json
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 
@@ -72,6 +73,57 @@ class StateBackend(abc.ABC):
         duration_ms: int,
         output: Any = None,
         error: Optional[str] = None,
+    ) -> None:
+        ...
+
+    # --- memoria episódica (Fase 17, tenant-filtered) ----------------------
+    # TODAS las lecturas filtran por tenant_id explícitamente para evitar
+    # fuga cross-tenant (el ``search`` genérico NO filtra; no usarlo para memoria).
+    @abc.abstractmethod
+    def memory_append(
+        self,
+        *,
+        tenant_id: Optional[str],
+        session_id: str,
+        memory_id: str,
+        value: Any,
+    ) -> None:
+        ...
+
+    @abc.abstractmethod
+    def memory_get(
+        self,
+        *,
+        tenant_id: Optional[str],
+        session_id: str,
+        memory_id: str,
+    ) -> Optional[dict]:
+        ...
+
+    @abc.abstractmethod
+    def memory_get_recent(
+        self,
+        *,
+        tenant_id: Optional[str],
+        session_id: str,
+        limit: int = 8,
+    ) -> List[dict]:
+        ...
+
+    @abc.abstractmethod
+    def memory_search_tenant(
+        self,
+        *,
+        tenant_id: Optional[str],
+        session_id: Optional[str],
+        query: str,
+        limit: int = 5,
+    ) -> List[dict]:
+        ...
+
+    @abc.abstractmethod
+    def memory_clear_session(
+        self, *, tenant_id: Optional[str], session_id: str
     ) -> None:
         ...
 
@@ -153,6 +205,50 @@ def init_schema(conn) -> None:  # type: ignore[no-untyped-def]
         );
         """
     )
+    # --- memoria episódica (Fase 17) ----------------------------------------
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS memory_episodic (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tenant_id TEXT,
+            session_id TEXT,
+            memory_id TEXT,
+            value_json TEXT,
+            created_at TEXT,
+            UNIQUE(tenant_id, session_id, memory_id)
+        );
+        """
+    )
+    if _fts5_available(conn):
+        try:
+            conn.execute(
+                """
+                CREATE VIRTUAL TABLE IF NOT EXISTS memory_episodic_fts USING fts5(
+                    memory_id,
+                    value_json,
+                    content='memory_episodic',
+                    content_rowid='id',
+                    tokenize='trigram'
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE TRIGGER IF NOT EXISTS me_ai AFTER INSERT ON memory_episodic BEGIN
+                    INSERT INTO memory_episodic_fts(rowid, memory_id, value_json) VALUES (new.id, new.memory_id, new.value_json);
+                END;
+                """
+            )
+            conn.execute(
+                """
+                CREATE TRIGGER IF NOT EXISTS me_ad AFTER DELETE ON memory_episodic BEGIN
+                    INSERT INTO memory_episodic_fts(memory_episodic_fts, rowid, memory_id, value_json) VALUES ('delete', old.id, old.memory_id, old.value_json);
+                END;
+                """
+            )
+        except Exception:  # pragma: no cover - FTS5 init best-effort
+            pass
+    conn.commit()
     if _fts5_available(conn):
         try:
             conn.execute(
@@ -314,6 +410,133 @@ class SqliteStateBackend(StateBackend):
         )
         self.conn.commit()
 
+    # --- memoria episódica (Fase 17, tenant-filtered) ----------------------
+    def memory_append(
+        self,
+        *,
+        tenant_id: Optional[str],
+        session_id: str,
+        memory_id: str,
+        value: Any,
+    ) -> None:
+        tenant_value = self._sentinel(tenant_id)
+        now = datetime.now(timezone.utc).isoformat()
+        self.conn.execute(
+            """
+            INSERT INTO memory_episodic (tenant_id, session_id, memory_id, value_json, created_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(tenant_id, session_id, memory_id) DO UPDATE SET value_json = excluded.value_json, created_at = excluded.created_at
+            """,
+            (tenant_value, session_id, memory_id, self._dump(value), now),
+        )
+        self.conn.commit()
+
+    def memory_get(
+        self,
+        *,
+        tenant_id: Optional[str],
+        session_id: str,
+        memory_id: str,
+    ) -> Optional[dict]:
+        tenant_value = self._sentinel(tenant_id)
+        row = self.conn.execute(
+            "SELECT value_json FROM memory_episodic WHERE tenant_id = ? AND session_id = ? AND memory_id = ?",
+            (tenant_value, session_id, memory_id),
+        ).fetchone()
+        if row is None:
+            return None
+        return self._normalize_row(row["value_json"])
+
+    def memory_get_recent(
+        self,
+        *,
+        tenant_id: Optional[str],
+        session_id: str,
+        limit: int = 8,
+    ) -> List[dict]:
+        tenant_value = self._sentinel(tenant_id)
+        rows = self.conn.execute(
+            """
+            SELECT value_json FROM memory_episodic
+            WHERE tenant_id = ? AND session_id = ?
+            ORDER BY id DESC LIMIT ?
+            """,
+            (tenant_value, session_id, limit),
+        ).fetchall()
+        out: List[dict] = []
+        for row in rows:
+            parsed = self._normalize_row(row["value_json"])
+            if isinstance(parsed, dict):
+                out.append(parsed)
+        return out
+
+    def memory_search_tenant(
+        self,
+        *,
+        tenant_id: Optional[str],
+        session_id: Optional[str],
+        query: str,
+        limit: int = 5,
+    ) -> List[dict]:
+        tenant_value = self._sentinel(tenant_id)
+        # Búsqueda por substring (LIKE) filtrada ESTRICTAMENTE por tenant_id
+        # (riesgo de fuga cross-tenant mitigado). No depende del tokenizer FTS5,
+        # así que funciona siempre (offline-safe) y es determinista.
+        # El value_json guarda el contenido con escape JSON (p.ej. la ñ como
+        # \u00f1), por eso normalizamos la query al mismo formato que produce
+        # json.dumps para que el LIKE coincida con caracteres no-ASCII.
+        import json as _json
+
+        # El value_json guarda el contenido con escape JSON (p.ej. la ñ como
+        # \u00f1), por eso normalizamos la query al mismo formato que produce
+        # json.dumps. Escapamos los metacaracteres de LIKE (% _ \) para que la
+        # búsqueda sea literal y segura (sin usar ESCAPE, que interferiría con
+        # la barra invertida del escape JSON).
+        raw = _json.dumps(query).strip(chr(34))
+        # Escapamos solo los metacaracteres de LIKE (% _) para que la búsqueda
+        # sea literal. NO escapamos la barra invertida: el valor JSON almacena
+        # \u00f1 con una barra literal y, sin cláusula ESCAPE, LIKE trata la
+        # barra como carácter normal (coincide con el valor almacenado).
+        escaped = raw.replace("%", "\\%").replace("_", "\\_")
+        like = f"%{escaped}%"
+        try:
+            if session_id is not None:
+                rows = self.conn.execute(
+                    """
+                    SELECT value_json FROM memory_episodic
+                    WHERE tenant_id = ? AND session_id = ? AND value_json LIKE ?
+                    ORDER BY id DESC LIMIT ?
+                    """,
+                    (tenant_value, session_id, like, limit),
+                ).fetchall()
+            else:
+                rows = self.conn.execute(
+                    """
+                    SELECT value_json FROM memory_episodic
+                    WHERE tenant_id = ? AND value_json LIKE ?
+                    ORDER BY id DESC LIMIT ?
+                    """,
+                    (tenant_value, like, limit),
+                ).fetchall()
+        except Exception:  # query/SQL inesperado => degrada a [].
+            return []
+        out: List[dict] = []
+        for row in rows:
+            parsed = self._normalize_row(row["value_json"])
+            if isinstance(parsed, dict):
+                out.append(parsed)
+        return out
+
+    def memory_clear_session(
+        self, *, tenant_id: Optional[str], session_id: str
+    ) -> None:
+        tenant_value = self._sentinel(tenant_id)
+        self.conn.execute(
+            "DELETE FROM memory_episodic WHERE tenant_id = ? AND session_id = ?",
+            (tenant_value, session_id),
+        )
+        self.conn.commit()
+
     def close(self) -> None:
         self.conn.close()
 
@@ -375,6 +598,23 @@ class PostgresStateBackend(StateBackend):
             Column("started_at", String(64)),
             Column("finished_at", String(64)),
             Column("duration_ms", Integer),
+        )
+        self._memory_episodic = Table(
+            "memory_episodic",
+            self._meta,
+            Column("id", Integer, primary_key=True, autoincrement=True),
+            Column("tenant_id", String(255)),
+            Column("session_id", String(255), nullable=False),
+            Column("memory_id", String(1024), nullable=False),
+            Column("value_json", Text),
+            Column("created_at", String(64)),
+            Column(
+                "UNIQUE",
+                "tenant_id",
+                "session_id",
+                "memory_id",
+                _name="uq_memep_tsm",
+            ),
         )
         self._create_schema()
 
@@ -490,6 +730,132 @@ class PostgresStateBackend(StateBackend):
                     started_at=started_at,
                     finished_at=finished_at,
                     duration_ms=duration_ms,
+                )
+            )
+
+    # --- memoria episódica (Fase 17, tenant-filtered) ----------------------
+    def memory_append(
+        self,
+        *,
+        tenant_id: Optional[str],
+        session_id: str,
+        memory_id: str,
+        value: Any,
+    ) -> None:
+        from datetime import datetime, timezone
+
+        from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+        now = datetime.now(timezone.utc).isoformat()
+        tenant_value = self._sentinel_str(tenant_id)
+        stmt = pg_insert(self._memory_episodic).values(
+            tenant_id=tenant_value,
+            session_id=session_id,
+            memory_id=memory_id,
+            value_json=self._dump(value),
+            created_at=now,
+        )
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["tenant_id", "session_id", "memory_id"],
+            set_={
+                "value_json": stmt.excluded.value_json,
+                "created_at": stmt.excluded.created_at,
+            },
+        )
+        with self.engine.begin() as conn:
+            conn.execute(stmt)
+
+    def memory_get(
+        self,
+        *,
+        tenant_id: Optional[str],
+        session_id: str,
+        memory_id: str,
+    ) -> Optional[dict]:
+        from sqlalchemy import select
+
+        tenant_value = self._sentinel_str(tenant_id)
+        with self.engine.connect() as conn:
+            row = conn.execute(
+                select(self._memory_episodic.c.value_json).where(
+                    self._memory_episodic.c.tenant_id == tenant_value,
+                    self._memory_episodic.c.session_id == session_id,
+                    self._memory_episodic.c.memory_id == memory_id,
+                )
+            ).fetchone()
+        if row is None:
+            return None
+        return self._normalize_row(row[0])
+
+    def memory_get_recent(
+        self,
+        *,
+        tenant_id: Optional[str],
+        session_id: str,
+        limit: int = 8,
+    ) -> List[dict]:
+        from sqlalchemy import select
+
+        tenant_value = self._sentinel_str(tenant_id)
+        with self.engine.connect() as conn:
+            rows = conn.execute(
+                select(self._memory_episodic.c.value_json)
+                .where(
+                    self._memory_episodic.c.tenant_id == tenant_value,
+                    self._memory_episodic.c.session_id == session_id,
+                )
+                .order_by(self._memory_episodic.c.id.desc())
+                .limit(limit)
+            ).fetchall()
+        out: List[dict] = []
+        for row in rows:
+            parsed = self._normalize_row(row[0])
+            if isinstance(parsed, dict):
+                out.append(parsed)
+        return out
+
+    def memory_search_tenant(
+        self,
+        *,
+        tenant_id: Optional[str],
+        session_id: Optional[str],
+        query: str,
+        limit: int = 5,
+    ) -> List[dict]:
+        from sqlalchemy import select
+
+        like = f"%{query}%"
+        tenant_value = self._sentinel_str(tenant_id)
+        conds = [
+            self._memory_episodic.c.tenant_id == tenant_value,
+            self._memory_episodic.c.value_json.ilike(like),
+        ]
+        if session_id is not None:
+            conds.append(self._memory_episodic.c.session_id == session_id)
+        with self.engine.connect() as conn:
+            rows = conn.execute(
+                select(self._memory_episodic.c.value_json)
+                .where(*conds)
+                .limit(limit)
+            ).fetchall()
+        out: List[dict] = []
+        for row in rows:
+            parsed = self._normalize_row(row[0])
+            if isinstance(parsed, dict):
+                out.append(parsed)
+        return out
+
+    def memory_clear_session(
+        self, *, tenant_id: Optional[str], session_id: str
+    ) -> None:
+        from sqlalchemy import delete
+
+        tenant_value = self._sentinel_str(tenant_id)
+        with self.engine.begin() as conn:
+            conn.execute(
+                delete(self._memory_episodic).where(
+                    self._memory_episodic.c.tenant_id == tenant_value,
+                    self._memory_episodic.c.session_id == session_id,
                 )
             )
 

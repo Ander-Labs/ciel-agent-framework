@@ -3,6 +3,40 @@
 Todas las versions siguen [SemVer](https://semver.org/lang/es/). v1.0.0 está
 reservada para la madurez/GA del framework; las fases pendientes son `0.x`.
 
+## [0.11.0] — Fase 17: Memoria, RAG y conocimiento
+
+### Nuevo
+- **Memoria episódica nativa (Pilar A, offline-safe)**: `ciel.runtime.memory_episodic`
+  con `EpisodicStore` y `MemoryConfig`. Persiste user/assistant por
+  `(tenant_id, session_id)`, con `append` / `get_recent` / `get_by_id` /
+  `search` (filtrada **estrictamente por tenant** — sin fuga cross-tenant) /
+  `clear_session`. Se recupera e inyecta como contexto en el system prompt del
+  agente de forma aditiva (`Agent(memory=store)`).
+- **RAG enterprise (Pilares B/C, offline-safe por defecto)**: nuevo paquete
+  `ciel.rag` con `KnowledgeBase` / `Retriever` / `SemanticCache`, índice
+  vectorial `InMemoryVectorStore` + `DeterministicEmbeddingProvider` (sin red),
+  búsqueda híbrida BM25 + vector con fusión RRF y rerank, chunking configurable
+  (token/paragraph), loaders MD/HTML/TXT (PDF opt-in) y tools RAG
+  (`retrieve`, `kb_add`) que se enchufan al agente vía `rag_tools(kb)`.
+- **API pública aditiva**: `ciel.EpisodicStore`, `ciel.MemoryConfig` y
+  `install_agent_memory_support(Agent)` (mismo patrón que skills). Degrada
+  graceful a "sin memoria" si no se configura. No rompe la API pública.
+- **Aislamiento multi-tenant nativo** en toda memoria/RAG (requisito k8s/VPS).
+- **Extra `rag` opcional** en `pyproject.toml` (`chromadb`, `pypdf`); el
+  default corre sin red ni keys.
+
+### Cambios internos
+- `state_backend` gana métodos de memoria episódica (`memory_append`,
+  `memory_get`, `memory_get_recent`, `memory_search_tenant`,
+  `memory_clear_session`) sobre SQLite/Postgres, aislados por `tenant_id`.
+- `Agent.arun`/`astream` usan `session_id` estable por agente para que la
+  memoria episódica persista a lo largo de la conversación (antes se renovaba
+  por run, rompiendo la persistencia).
+- `memory_search_tenant` (SQLite) migrado de FTS5 trigram a `LIKE` por tenant
+  (determinista, offline-safe y sin fuga cross-tenant).
+- Tests offline de F17: 17 nuevos (memoria episódica, RAG end-to-end, tools,
+  integración con `Agent`). Suite total: 434 passed / 7 skipped.
+
 ## [0.10.0] — Fase 16: Providers y multimodal
 
 ### Nuevo

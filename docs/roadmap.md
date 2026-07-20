@@ -127,10 +127,16 @@ Capa de providers ampliada y multimodal nativo:
 - `auto_provider` reconoce prefijos: `gpt-`/`o1`/`o3`→OpenAI, `claude-`→Anthropic,
   `gemini-`/`models/`→Gemini, `azure/`→Azure, `ollama/`→Ollama, `vllm/`→vLLM.
 
-### v0.11 — 📋 Memoria, RAG y conocimiento
+### v0.11 — ✅ Disponible (Memoria, RAG y conocimiento)
 
-- Memoria avanzada (episódica + semántica) y RAG listo para enterprise
-  (plantillas, hybrid search, re-ranking, document loaders, caché semántico).
+- Memoria episódica nativa (`EpisodicStore`, `MemoryConfig`) inyectada en el
+  agente, aislada por tenant, offline-safe.
+- RAG enterprise (`ciel.rag`): `KnowledgeBase`/`Retriever`/`SemanticCache`,
+  índice vectorial sin red (`InMemoryVectorStore` + `DeterministicEmbeddingProvider`),
+  búsqueda híbrida BM25+vector con fusión RRF y rerank, chunking configurable,
+  loaders MD/HTML/TXT (PDF opt-in) y tools RAG (`rag_tools`).
+- API pública aditiva: `ciel.EpisodicStore`, `ciel.MemoryConfig`,
+  `install_agent_memory_support`. Extra `rag` opcional (chromadb, pypdf).
 
 ### v0.12 — 📋 Evaluación y testing
 

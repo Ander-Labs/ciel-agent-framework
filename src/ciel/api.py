@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import uuid
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union, get_type_hints
 
@@ -49,6 +50,7 @@ from ciel.runtime import (
     ToolProvider,
     ToolRegistry,
 )
+from ciel.runtime.memory_episodic import EpisodicStore, MemoryConfig
 from ciel.runtime.tools import Tool, ToolResult, ToolSpec
 
 __all__ = [
@@ -470,17 +472,37 @@ class Agent:
             )
         return effective
 
-    def _build_request(self, prompt: "str | list[dict[str, Any]]") -> ChatRequest:
+    def _build_request(
+        self,
+        prompt: "str | list[dict[str, Any]]",
+        *,
+        tenant_id: Optional[str] = None,
+        session_id: Optional[str] = None,
+    ) -> ChatRequest:
         messages: List[ChatMessage] = []
         if self.instructions:
             messages.append(ChatMessage(role="system", content=self.instructions))
+        # Memoria episódica (Fase 17, aditiva/offline-safe): recupera contexto
+        # previo del tenant/session y lo inyecta como system message adicional.
+        memory_ctx: Optional[str] = None
+        if getattr(self, "_memory", None) is not None and self._memory.enabled:
+            memory_ctx = self._memory_recall(prompt, tenant_id, session_id)  # type: ignore[attr-defined]
+        if memory_ctx:
+            messages.append(
+                ChatMessage(
+                    role="system",
+                    content=f"[Memoria del agente — contexto previo de esta sesión]\n{memory_ctx}",
+                )
+            )
         messages.append(ChatMessage(role="user", content=prompt))
+        extra = {"session_id": session_id} if session_id else {}
         return ChatRequest(
             messages=tuple(messages),
             tools=tuple(self._tool_specs),
             model=self.model,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
+            extra=extra,
         )
 
     async def arun(
@@ -502,12 +524,30 @@ class Agent:
                 "Agent has no provider. Pass provider=<ChatProvider> or model=<id> to Agent(...)."
             )
         effective_tenant = self._resolve_tenant(tenant_id)
+        # session_id estable por agente (no se renueva entre runs) para que la
+        # memoria episódica persista a lo largo de la conversación del agente.
+        _mem = getattr(self, "_memory", None)
+        if _mem is not None and _mem.enabled:
+            session_id = _mem.session_id()
+        else:
+            session_id = str(uuid.uuid4())
+        # Persistir el turno de usuario en memoria (pre-LLM).
+        if getattr(self, "_memory", None) is not None:
+            self._memory_persist(effective_tenant, session_id, "user", prompt)  # type: ignore[attr-defined]
         result = await self.runtime.run_agent_loop(
-            request=self._build_request(prompt),
+            request=self._build_request(prompt, tenant_id=effective_tenant, session_id=session_id),
             tenant_id=effective_tenant,
             toolset=self.toolset,
             limit=max(1, max_turns),
         )
+        # Persistir la respuesta del asistente en memoria (post-LLM).
+        if getattr(self, "_memory", None) is not None:
+            try:
+                assistant_text = result.response.choice.message.text()
+            except Exception:
+                assistant_text = None
+            if assistant_text:
+                self._memory_persist(effective_tenant, session_id, "assistant", assistant_text)  # type: ignore[attr-defined]
         return AgentResponse(raw=result)
 
     def run(
@@ -552,10 +592,21 @@ class Agent:
                 "Agent has no provider. Pass provider=<ChatProvider> or model=<id> to Agent(...)."
             )
         effective_tenant = self._resolve_tenant(tenant_id)
+        # session_id estable por agente (no se renueva entre runs) para que la
+        # memoria episódica persista a lo largo de la conversación del agente.
+        _mem = getattr(self, "_memory", None)
+        if _mem is not None and _mem.enabled:
+            session_id = _mem.session_id()
+        else:
+            session_id = str(uuid.uuid4())
+        if getattr(self, "_memory", None) is not None:
+            self._memory_persist(effective_tenant, session_id, "user", prompt)  # type: ignore[attr-defined]
         if max_turns <= 1 or not self._tool_specs:
             # Pure streaming path: tokens directly from the provider.
             async for chunk in self.runtime.stream_tokens(
-                request=self._build_request(prompt),
+                request=self._build_request(
+                    prompt, tenant_id=effective_tenant, session_id=session_id
+                ),
                 tenant_id=effective_tenant,
                 toolset=self.toolset,
             ):
@@ -580,3 +631,14 @@ from ciel.runtime.skill_agent_integration import (  # noqa: E402
 )
 install_agent_skill_support(Agent)
 __all__ = list(__all__) + ["skill", "teach", "global_skill_library"]
+
+# Fase 17 — Memoria episódica (aditiva, offline-safe). Engancha Agent(memory=...)
+# sin reescribir la API existente, igual que los skills.
+from ciel.runtime.memory_agent_integration import (  # noqa: E402
+    AgentMemory,
+    install_agent_memory_support,
+)
+from ciel.runtime.memory_episodic import EpisodicStore, MemoryConfig  # noqa: E402
+
+install_agent_memory_support(Agent)
+__all__ = list(__all__) + ["EpisodicStore", "MemoryConfig", "AgentMemory"]
