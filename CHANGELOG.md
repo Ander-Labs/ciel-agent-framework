@@ -3,6 +3,37 @@
 Todas las versions siguen [SemVer](https://semver.org/lang/es/). v1.0.0 está
 reservada para la madurez/GA del framework; las fases pendientes son `0.x`.
 
+## [0.12.0] — Fase 18: Evaluación y testing
+
+### Nuevo
+- **`MockProvider` determinista** (`ciel.providers.MockProvider`): proveedor
+  offline-safe (sin red ni API keys) con modos `fixed`/`echo`/`map`; registrado
+  en `auto_provider` con prefijo `mock/`. Para tests y eval reproducibles.
+- **`ciel evaluate`** (CLI Typer, `ciel.cli.evaluate`): `run` (KPIs en tabla
+  Rich + exit-code por umbral), `regression` (gate contra `results.json`
+  baseline) y `redteam` (prompt injection / fuga de tenant con assertions de
+  aislamiento). Cableado en `ciel.cli.main`.
+- **`ciel.eval`**: `Evaluator` (corre dataset sobre un agente/callable, acumula
+  KPIs, exporta `results.json`), `EvalCase`, `load_dataset` (YAML) y métricas
+  deterministas propias: `exact_match`, `contains`, `f1_token`, `faithfulness`,
+  `context_relevance` (usa `Retriever` de `ciel.rag` si se pasa),
+  `answer_relevance`.
+- **Integración opt-in** con DeepEval/RAGAS/TruLens vía extra `eval`
+  (`use_third_party=True`); degrada a métricas propias si el extra no está
+  instalado (las funciones de terceros devuelven `None`).
+- **Extra `eval`** en `pyproject.toml` (`deepeval`, `ragas`, `trulens-eval`);
+  el core no lo requiere.
+- **CI**: nuevo job `eval` en `.github/workflows/ci.yml` (offline, `MockProvider`,
+  sin red) que corre `tests/eval` + smoke CLI y hace gate de regression.
+
+### Cambios internos
+- Corrección de documentación obsoleta: `docs/guide/concepts.md` refería
+  `MemoryStore` (memoria declarativa FTS5) — ahora documenta `EpisodicStore`
+  (memoria episódica nativa por `(tenant_id, session_id)`, Fase 17).
+- API pública aditiva: `ciel.eval` (`Evaluator`, `EvalCase`, métricas,
+  `load_dataset`) y `ciel.providers.MockProvider`. No rompe `Agent`,
+  `AgentResponse`, `ToolResult` ni `ChatProvider`.
+
 ## [0.11.0] — Fase 17: Memoria, RAG y conocimiento
 
 ### Nuevo

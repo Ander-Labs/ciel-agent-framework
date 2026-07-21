@@ -1,0 +1,8 @@
+- query: "¿Capital de Francia?"
+  expected: "París"
+  context: "Francia es un país europeo; su capital es París."
+- query: "¿Cuánto es 2 + 2?"
+  expected: "4"
+- query: "¿Color del cielo?"
+  expected: "azul"
+  context: "El cielo suele verse de color azul durante el día."

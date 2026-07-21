@@ -15,6 +15,7 @@ paquete público de `ciel`:
 | [`ciel.adapters`](adapters.md) | Adapters de mensajería agnósticos al canal (Teams, Discord, Web UI). |
 | [`ciel.gateway`](gateway.md) | Superficie de gateway: FastAPI, MCP y routers de mensajería. |
 | [`ciel.providers`](providers.md) | Contratos y proveedores de modelos (OpenAI-compatible, Anthropic). |
+| [`ciel.eval`](eval.md) | Evaluación y testing reproducible (MockProvider, Evaluator, métricas deterministas). |
 | [`ciel.runtime`](runtime.md) | Runtime de agentes, tool loop, DTOs de chat y despacho de tools. |
 | [`ciel.security`](security.md) | Políticas de aprobación y redacción de secretos/PII. |
 | [`ciel.orchestration`](orchestration.md) | Orquestación: grafos de estado, flows, group chat, agentes autónomos. |

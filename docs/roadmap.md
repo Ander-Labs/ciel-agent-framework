@@ -138,10 +138,23 @@ Capa de providers ampliada y multimodal nativo:
 - API pública aditiva: `ciel.EpisodicStore`, `ciel.MemoryConfig`,
   `install_agent_memory_support`. Extra `rag` opcional (chromadb, pypdf).
 
-### v0.12 — 📋 Evaluación y testing
+### v0.12 — ✅ Disponible (Evaluación y testing)
 
-- `ciel evaluate` (DeepEval/RAGAS/TruLens), KPIs, MockModel, CI actions,
-  red-teaming y regression testing.
+Capa de evaluación y testing reproducible, offline-safe por defecto:
+
+- **`MockProvider`** determinista (`ciel.providers.MockProvider`): modos
+  `fixed`/`echo`/`map`, sin red ni API keys; registrado en `auto_provider`
+  con prefijo `mock/`.
+- **`ciel evaluate`** (CLI Typer): `run` (KPIs + Rich, exit-code por umbral),
+  `regression` (gate contra baseline) y `redteam` (prompt injection / fuga de
+  tenant con assertions de aislamiento).
+- **`ciel.eval`**: `Evaluator`, `EvalCase`, `load_dataset` (YAML) y métricas
+  deterministas propias (`exact_match`, `contains`, `f1_token`, `faithfulness`,
+  `context_relevance`, `answer_relevance`).
+- Integración **opt-in** con DeepEval/RAGAS/TruLens vía extra `eval` (degrada a
+  métricas propias si no está instalado).
+- **CI**: nuevo job `eval` (offline, `MockProvider`, sin red) para regression
+  en PRs.
 
 ### v0.13 — 📋 Autonomía II: auto-aprendizaje
 

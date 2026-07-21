@@ -86,7 +86,7 @@ añadido: pasas `tenant_id=` en el runtime y en los tools.
 ## Session / Memory / Checkpoint
 
 - `Session`: conversación aislada (estado en runtime/orchestration).
-- `MemoryStore`: memoria declarativa (SQLite + FTS5).
+- `EpisodicStore`: memoria episódica nativa por `(tenant_id, session_id)` (SQLite), inyectada en el agente vía `Agent(memory=...)`. Aislada por tenant, offline-safe.
 - `CheckpointStore` + `CheckpointedAgentRuntime`: punto de reanudación durable.
 
 ## Graph / Flow

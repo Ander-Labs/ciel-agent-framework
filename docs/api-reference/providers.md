@@ -65,6 +65,7 @@ assert img.text() == "¿Qué hay en esta imagen?"
 | `GeminiProvider`       | `ciel.providers.gemini`     | Gemini. Mapea `image_url` a `inline_data`.                  |
 | `AzureOpenAIProvider`  | `ciel.providers.azure`      | Azure OpenAI (deployment + `api-version`).                  |
 | `LiteLLMProvider`      | `ciel.providers.litellm`    | Meta-provider de 100+ modelos. **Requiere el extra `litellm`.** |
+| `MockProvider`        | `ciel.providers.mock`       | Proveedor determinista offline (modos `echo`/`map`/`fixed`). **Sin red.** |
 
 ### `LiteLLMProvider` (extra `litellm`)
 
@@ -122,6 +123,7 @@ prefijo del id de modelo (lee la API key del entorno):
 | `azure/`       | `AzureOpenAIProvider`         | `AZURE_OPENAI_ENDPOINT`     |
 | `ollama/`      | OpenAI-compatible (local)     | `http://localhost:11434/v1` |
 | `vllm/`        | OpenAI-compatible (self-host) | `http://localhost:8000/v1` (o `VLLM_BASE_URL`) |
+| `mock/`        | `MockProvider`                | Offline (sin red). Modos `echo`/`map`/`fixed`. |
 
 `ciel.Agent(model="gpt-4o-mini")` usa esto internamente; un `provider=`
 explícito siempre gana sobre la inferencia.
@@ -143,6 +145,36 @@ explícito siempre gana sobre la inferencia.
       members: true
 
 ::: ciel.providers.gemini
+    options:
+      show_root_heading: false
+      members: true
+
+### `MockProvider` (offline, sin extra)
+
+Proveedor determinista para tests y evaluación sin red ni API keys. Tres modos:
+
+- `fixed`: responde una cadena constante (`response=`).
+- `echo`: repite la última palabra del prompt del usuario.
+- `map`: dict `prompt -> response` (coincidencia exacta o substring, case-insensitive).
+
+```python
+from ciel.providers import MockProvider
+
+# Respuesta fija (ideal para eval de métricas cerradas)
+provider = MockProvider(mode="fixed", response="París")
+
+# Mapa de prompts a respuestas
+provider = MockProvider(mode="map", mapping={"capital de Francia": "París"})
+
+# Auto-provider por prefijo (Fase 18)
+from ciel.providers.auto import auto_provider
+p = auto_provider("mock/echo")  # -> MockProvider(mode="echo")
+```
+
+Es útil como evaluable de `ciel.evaluate` (ver [`ciel.eval`](eval.md)) para
+correr datasets de forma reproducible en CI sin consumir tokens.
+
+::: ciel.providers.mock
     options:
       show_root_heading: false
       members: true

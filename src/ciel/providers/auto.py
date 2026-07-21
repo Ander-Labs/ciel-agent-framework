@@ -34,6 +34,9 @@ _MODEL_PREFIXES: Tuple[Tuple[str, str, str], ...] = (
     ("ollama/", "OLLAMA_API_KEY", "ollama"),
     # vLLM / TGI self-hosted OpenAI-compatible endpoints use a "vllm/" prefix.
     ("vllm/", "VLLM_API_KEY", "vllm"),
+    # Mock provider determinista (Fase 18) para tests/eval sin red.
+    ("mock/", "", "mock"),
+    ("mock", "", "mock"),
 )
 
 
@@ -109,6 +112,17 @@ def auto_provider(model: Optional[str]) -> ChatProvider:
             api_key=os.environ.get("VLLM_API_KEY"),
             default_model=model_id,
         )
+
+    # mock provider determinista (Fase 18): sin red ni API key. Acepta
+    # "mock" (alias de fixed) o "mock/<mode>" (echo|map|fixed).
+    if label == "mock" or (model is not None and model.startswith("mock")):
+        from ciel.providers.mock import MockProvider
+
+        sub = model[len("mock/"):] if model and model.startswith("mock/") else ""
+        mode = "fixed"
+        if sub in ("echo", "map", "fixed"):
+            mode = sub
+        return MockProvider(mode=mode, model=model or "mock")
 
     # openai-compatible (default)
     base_url = _default_base_url("openai")

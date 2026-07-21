@@ -397,3 +397,7 @@ try:  # pragma: no cover - depends on extras install
     from ciel.providers.litellm import LiteLLMProvider
 except ImportError:
     LiteLLMProvider = None  # type: ignore[assignment]
+
+# MockProvider (Fase 18) es offline-safe (sin red ni extra), así que se importa
+# directamente para estar disponible en ``ciel.providers.MockProvider``.
+from ciel.providers.mock import MockProvider

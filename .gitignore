@@ -62,3 +62,6 @@ docs/CI.md
 docs/UPGRADE_*.md
 docs/dev/
 TASKS.md
+
+# Eval CLI output
+results.json
