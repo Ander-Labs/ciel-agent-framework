@@ -1,0 +1,2508 @@
+
+<!doctype html>
+<html lang="es" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Framework enterprise de agentes autónomos, multi-tenant y model/deploy-agnostic. Documentación oficial de mana-ciel (import ciel).">
+      
+      
+      
+        <link rel="canonical" href="https://ander-labs.github.io/ciel-agent-framework/roadmap/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../guide/quickstart/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Roadmap - Ciel Agent Framework — Documentación oficial</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#roadmap-publico-ciel-agent-framework" class="md-skip">
+          Saltar a contenido
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabecera">
+    <a href=".." title="Ciel Agent Framework — Documentación oficial" class="md-header__button md-logo" aria-label="Ciel Agent Framework — Documentación oficial" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ciel Agent Framework — Documentación oficial
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Roadmap
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Cambiar a modo claro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Cambiar a modo claro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Cambiar a modo oscuro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Cambiar a modo oscuro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Búsqueda" placeholder="Búsqueda" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Buscar">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Compartir" aria-label="Compartir" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpiar" aria-label="Limpiar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando búsqueda
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Ander-Labs/ciel-agent-framework" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Ander-Labs/ciel-agent-framework
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Pestañas" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Inicio
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Roadmap
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../guide/quickstart/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guía
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../cookbook/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Cookbook
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../design/multi_tenancy/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Arquitectura
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../runbooks/deploy/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Runbooks (ops)
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../upgrade/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Upgrade
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../api-reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Referencia API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../sdk/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  SDK
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navegación" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Ciel Agent Framework — Documentación oficial" class="md-nav__button md-logo" aria-label="Ciel Agent Framework — Documentación oficial" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Ciel Agent Framework — Documentación oficial
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Ander-Labs/ciel-agent-framework" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Ander-Labs/ciel-agent-framework
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inicio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Tabla de contenidos">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Tabla de contenidos
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#vision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visión
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#leyenda-de-estado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Leyenda de estado
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hitos-por-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hitos por versión
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Hitos por versión">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v04-disponible" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.4 — ✅ Disponible
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v05-disponible-developer-experience-ii" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.5 — ✅ Disponible (Developer Experience II)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v06-disponible-autonomia-i-skill-library" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.6 — ✅ Disponible (Autonomía I: Skill Library)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v07-disponible-ciel-studio-web-ui-observabilidad-visual" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.7 — ✅ Disponible (Ciel Studio — Web UI + observabilidad visual)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v08-disponible-escala-y-ha-real" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.8 — ✅ Disponible (Escala y HA real)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v09-disponible-enterprise-reforzado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.9 — ✅ Disponible (Enterprise reforzado)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v010-disponible-providers-y-multimodal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.10 — ✅ Disponible (Providers y multimodal)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v011-disponible-memoria-rag-y-conocimiento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.11 — ✅ Disponible (Memoria, RAG y conocimiento)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v012-disponible-evaluacion-y-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.12 — ✅ Disponible (Evaluación y testing)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v013-autonomia-ii-auto-aprendizaje" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.13 — 📋 Autonomía II: auto-aprendizaje
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v014-autonomia-iii-curricula-y-exploracion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.14 — 📋 Autonomía III: curricula y exploración
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v015-inteligencia-colectiva" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.15 — 📋 Inteligencia colectiva
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v016-apis-multi-lenguaje-y-despliegue-moderno" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.16 — 📋 APIs multi-lenguaje y despliegue moderno
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v017-observability-ga-y-multi-cloud" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.17 — 📋 Observability GA y multi-cloud
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v018-api-stability-y-ecosistema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.18 — 📋 API stability y ecosistema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v10-ga-madurez-meta-agente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.0 — 📋 GA / Madurez (meta-agente)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#como-seguir-el-progreso" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cómo seguir el progreso
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guía
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guía
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inicio rápido
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conceptos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/providers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Providers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/plugins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/skills/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skill Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/studio/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ciel Studio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/tutorial_plugin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorial de plugin
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/deploy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Despliegue
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuración
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../cookbook/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cookbook
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Cookbook
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cookbook/multi_tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Múltiples tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cookbook/context_tenant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multitenancy con Context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cookbook/async_tool/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools asíncronas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cookbook/system_instructions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instrucciones de sistema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cookbook/real_provider/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Provider real
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cookbook/multimodal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contenido multimodal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cookbook/auto_provider_multiturn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Auto-provider y multi-turno (Fase 11)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arquitectura
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Arquitectura
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design/multi_tenancy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Multi-tenancy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks (ops)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Runbooks (ops)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runbooks/deploy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Despliegue
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runbooks/incident/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Incidentes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runbooks/rollback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rollback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runbooks/backup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../runbooks/hpa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HPA (autoescalado)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../upgrade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Upgrade
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api-reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Referencia API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8" id="__nav_8_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Referencia API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-reference/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-reference/observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Observability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-reference/adapters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adapters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-reference/gateway/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gateway
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-reference/providers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Providers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-reference/runtime/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-reference/skills_lib/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skill Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-reference/studio/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ciel Studio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-reference/studio_trace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ciel Studio: Trace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-reference/studio_cost/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ciel Studio: Cost
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-reference/security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-reference/orchestration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sdk/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SDK
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="roadmap-publico-ciel-agent-framework"><a class="headerlink" href="#roadmap-publico-ciel-agent-framework" title="Permanent link">&para;</a>Roadmap público — Ciel Agent Framework</h1>
+<blockquote>
+<p>Documentación oficial de <code>mana-ciel</code> (import <code>ciel</code>). Este roadmap describe las
+capacidades que llegarán a los usuarios y las versiones previstas. Es
+orientativo: el orden y las fechas pueden ajustarse según aprendizajes de uso.
+Para el diario técnico de ingeniería, consulta los canales internos del equipo.</p>
+</blockquote>
+<h2 id="vision"><a class="headerlink" href="#vision" title="Permanent link">&para;</a>Visión</h2>
+<p>Un framework enterprise para construir agentes autónomos y sistemas multi-agente,
+model-agnostic y deploy-agnostic, con multitenancy y trazabilidad nativas
+(k8s/VPS). Principio rector: <em>harness-first</em>, ejecutable sobre planificación
+extendida, y — a largo plazo — agentes que <strong>crean, verifican, refinan y enseñan
+sus propios skills</strong> (autonomía auto-incremental) llevada a nivel enterprise.</p>
+<h2 id="leyenda-de-estado"><a class="headerlink" href="#leyenda-de-estado" title="Permanent link">&para;</a>Leyenda de estado</h2>
+<ul>
+<li>✅ Disponible</li>
+<li>🟡 En desarrollo</li>
+<li>📋 Planificado</li>
+</ul>
+<hr />
+<h2 id="hitos-por-version"><a class="headerlink" href="#hitos-por-version" title="Permanent link">&para;</a>Hitos por versión</h2>
+<h3 id="v04-disponible"><a class="headerlink" href="#v04-disponible" title="Permanent link">&para;</a>v0.4 — ✅ Disponible</h3>
+<p>Base sólida y usable en producción:</p>
+<ul>
+<li><strong>Orquestación best-of-breed</strong>: grafos estilo LangGraph, flows estilo CrewAI,
+  group-chat estilo AutoGen, root-agent estilo ADK, y session state persistente
+  por tenant.</li>
+<li><strong>Agencia autónoma</strong>: bucle durable con reintentos exponenciales y
+  reanudación tras reinicio (<code>ciel loop run</code> / <code>ciel loop resume</code>).</li>
+<li><strong>Enterprise</strong>: RBAC/OIDC, auditoría inmutable (hash-chain), governance de
+  costos, secretos (Vault/K8s/env) y rate-limiting por tenant.</li>
+<li><strong>Deploy</strong>: Helm (HA: PDB, HPA, anti-affinity), OTel/metrics, adapters
+  (Teams/Discord/Web UI), Human-in-the-loop en grafos.</li>
+<li><strong>Developer Experience</strong>: fachada ergonómica, <code>ciel init</code> offline-safe, guías
+  y cookbooks, API reference pública.</li>
+</ul>
+<h3 id="v05-disponible-developer-experience-ii"><a class="headerlink" href="#v05-disponible-developer-experience-ii" title="Permanent link">&para;</a>v0.5 — ✅ Disponible (Developer Experience II)</h3>
+<p>Bajar la curva de adopción para nuevos usuarios:</p>
+<ul>
+<li>Creación de agentes en una línea: <code>model="gpt-4o"</code> elige el provider
+  automáticamente (auto-provider desde la cadena del modelo).</li>
+<li><strong>Streaming</strong> de respuestas (<code>astream</code>) y <strong>loop ReAct multi-turno</strong> integrados.</li>
+<li><code>@ciel.tool</code> con inferencia de schema, validación Pydantic V2 y errores DX claros.</li>
+<li>Objetivo: un agente funcional con tres líneas, offline-safe.</li>
+</ul>
+<h3 id="v06-disponible-autonomia-i-skill-library"><a class="headerlink" href="#v06-disponible-autonomia-i-skill-library" title="Permanent link">&para;</a>v0.6 — ✅ Disponible (Autonomía I: Skill Library)</h3>
+<blockquote>
+<p><strong>Nota:</strong> la <em>Autonomía I (Skill Library)</em> estaba originalmente planeada para
+la v0.12 del roadmap (cuando las fases se numeraban como v1.x). Se adelantó y se
+entregó en la v0.6.0, por lo que todo el resto de hitos se renumera +1 (ver abajo).</p>
+</blockquote>
+<p>Primer nivel de autonía: el agente <strong>crea, verifica, versiona y enseña</strong> sus
+propios skills, todo offline-safe (sin red ni API keys):</p>
+<ul>
+<li><strong>Skill Library dinámica</strong> (<code>ciel.runtime.skills_lib</code>): store en memoria
+  escribible sobre el registry pasivo; <code>SkillLibrary.create_from_code</code>,
+  <code>register</code>, <code>get</code>, <code>list_skills</code>, <code>history</code>, <code>update</code> (con bump semántico) y
+  <code>remove</code>, con aislamiento por <code>tenant_id</code>.</li>
+<li><strong>Auto-verificación offline</strong> (<code>SkillVerifier</code>): validación de sintaxis +
+  ejecución de casos de prueba (<code>{"call": {...}, "expect": valor}</code>) antes de
+  confiar en un skill.</li>
+<li><strong>Versioning + changelog</strong> (<code>ciel.runtime.skill_versioning</code>):
+  <code>set_changelog</code> / <code>changelog</code> y la semilla del <strong>Skill Evolution Tree</strong>
+  (<code>evolution_tree</code>) que registra el parent de cada versión.</li>
+<li><strong>Composition engine</strong> (<code>ciel.runtime.skill_composition</code>): fusiona N skills en
+  uno nuevo con combinadores <code>sequence</code> / <code>parallel</code> / <code>selector</code>.</li>
+<li><strong>Doc auto-generation</strong> (<code>ciel.runtime.skill_doc</code>): <code>generate_doc</code> y
+  <code>to_markdown</code> extraen nombre, docstring y firma desde el código fuente (AST).</li>
+<li><strong>Integración con <code>ciel.Agent</code></strong> (<code>ciel.runtime.skill_agent_integration</code>):
+  decorador <code>@ciel.skill</code>, la librería singleton <code>global_skill_library</code>,
+  <code>Agent(skills=[...])</code>, el método <code>agent.teach(skill)</code> / <code>ciel.teach(agent, skill)</code>
+  (registra un skill verificado como tool ejecutable) y <code>agent.load_skills(...)</code>.</li>
+<li><strong>Skill metrics por tenant</strong> (<code>ciel.runtime.skill_metrics</code>): <code>SkillMetrics</code>
+  registra llamadas, éxitos/fallos, tasa de éxito y latencia promedio aisladas
+  por <code>tenant_id</code>.</li>
+<li><strong>CLI <code>ciel skills</code></strong> (offline): <code>list</code>, <code>create --name --description
+  --code-file</code>, <code>verify --name --test-cases</code>, <code>remove --name</code>.</li>
+</ul>
+<h3 id="v07-disponible-ciel-studio-web-ui-observabilidad-visual"><a class="headerlink" href="#v07-disponible-ciel-studio-web-ui-observabilidad-visual" title="Permanent link">&para;</a>v0.7 — ✅ Disponible (Ciel Studio — Web UI + observabilidad visual)</h3>
+<p>Dashboard mínimo operativo y observabilidad visual:</p>
+<ul>
+<li><strong>Web UI</strong> y dashboard mínimo: sesiones, board, loops y estado.</li>
+<li>Visualización de trazas y <strong>replay</strong> de session (time-travel); <strong>cost dashboard</strong>.</li>
+</ul>
+<h3 id="v08-disponible-escala-y-ha-real"><a class="headerlink" href="#v08-disponible-escala-y-ha-real" title="Permanent link">&para;</a>v0.8 — ✅ Disponible (Escala y HA real)</h3>
+<p>(Reordenado desde la v0.6 original del roadmap.)</p>
+<ul>
+<li>Backend de estado/checkpoint <strong>compartido</strong> (<code>StateBackend</code>: Postgres para
+  prod, SQLite para dev/local) para supervivencia multi-réplica sin pérdida de
+  sesión, con upsert idempotente por <code>(tenant_id, session_id, key)</code>.</li>
+<li>Ejecución de N réplicas con <strong>health reales</strong> (<code>/healthz</code> liveness, <code>/readyz</code>
+  readiness) y reanudación de checkpoint compartido con <strong>lease</strong> anti-doble-ejecución.</li>
+<li>Runbooks operativos completos (despliegue, incidente, rollback, backup, HPA)
+  y <code>BackupJob</code> (CronJob) en el chart Helm.</li>
+</ul>
+<h3 id="v09-disponible-enterprise-reforzado"><a class="headerlink" href="#v09-disponible-enterprise-reforzado" title="Permanent link">&para;</a>v0.9 — ✅ Disponible (Enterprise reforzado)</h3>
+<ul>
+<li><strong>SSO/OIDC</strong> con proveedor real (no solo verificación local de JWT).</li>
+<li><strong>Vault</strong> para secretos dinámicos y rotación.</li>
+<li><strong>Guardrails</strong> + sandbox de ejecución de código del agente (Docker/gVisor).</li>
+</ul>
+<h3 id="v010-disponible-providers-y-multimodal"><a class="headerlink" href="#v010-disponible-providers-y-multimodal" title="Permanent link">&para;</a>v0.10 — ✅ Disponible (Providers y multimodal)</h3>
+<p>Capa de providers ampliada y multimodal nativo:</p>
+<ul>
+<li><strong>Multimodal nativo</strong>: <code>ChatMessage.content</code> acepta <code>str | list[dict]</code>
+  (partes <code>text</code> / <code>image_url</code> / <code>input_audio</code>); nuevo helper
+  <code>ChatMessage.text()</code> degrada multimodal a texto concatenado.</li>
+<li><strong>LiteLLM</strong> como meta-provider (extra opcional <code>litellm</code>): instala con
+  <code>pip install "mana-ciel[litellm]"</code>; <code>LiteLLMProvider</code> expone 100+ modelos
+  vía el contrato <code>ChatProvider</code>, con <code>Router</code> para fallback/balanceo
+  (offline-safe, import diferido).</li>
+<li><strong>Azure OpenAI</strong>: <code>AzureOpenAIProvider</code> (deployment + api-version); prefijo
+  <code>azure/</code> en <code>auto_provider</code>.</li>
+<li><strong>Ollama</strong> local: prefijo <code>ollama/</code> → <code>OpenAICompatibleProvider</code> en
+  <code>http://localhost:11434/v1</code>.</li>
+<li><strong>vLLM/TGI</strong>: prefijo <code>vllm/</code> → <code>OpenAICompatibleProvider</code> en
+  <code>http://localhost:8000/v1</code> (configurable vía <code>VLLM_BASE_URL</code>).</li>
+<li><code>auto_provider</code> reconoce prefijos: <code>gpt-</code>/<code>o1</code>/<code>o3</code>→OpenAI, <code>claude-</code>→Anthropic,
+  <code>gemini-</code>/<code>models/</code>→Gemini, <code>azure/</code>→Azure, <code>ollama/</code>→Ollama, <code>vllm/</code>→vLLM.</li>
+</ul>
+<h3 id="v011-disponible-memoria-rag-y-conocimiento"><a class="headerlink" href="#v011-disponible-memoria-rag-y-conocimiento" title="Permanent link">&para;</a>v0.11 — ✅ Disponible (Memoria, RAG y conocimiento)</h3>
+<ul>
+<li>Memoria episódica nativa (<code>EpisodicStore</code>, <code>MemoryConfig</code>) inyectada en el
+  agente, aislada por tenant, offline-safe.</li>
+<li>RAG enterprise (<code>ciel.rag</code>): <code>KnowledgeBase</code>/<code>Retriever</code>/<code>SemanticCache</code>,
+  índice vectorial sin red (<code>InMemoryVectorStore</code> + <code>DeterministicEmbeddingProvider</code>),
+  búsqueda híbrida BM25+vector con fusión RRF y rerank, chunking configurable,
+  loaders MD/HTML/TXT (PDF opt-in) y tools RAG (<code>rag_tools</code>).</li>
+<li>API pública aditiva: <code>ciel.EpisodicStore</code>, <code>ciel.MemoryConfig</code>,
+  <code>install_agent_memory_support</code>. Extra <code>rag</code> opcional (chromadb, pypdf).</li>
+</ul>
+<h3 id="v012-disponible-evaluacion-y-testing"><a class="headerlink" href="#v012-disponible-evaluacion-y-testing" title="Permanent link">&para;</a>v0.12 — ✅ Disponible (Evaluación y testing)</h3>
+<p>Capa de evaluación y testing reproducible, offline-safe por defecto:</p>
+<ul>
+<li><strong><code>MockProvider</code></strong> determinista (<code>ciel.providers.MockProvider</code>): modos
+  <code>fixed</code>/<code>echo</code>/<code>map</code>, sin red ni API keys; registrado en <code>auto_provider</code>
+  con prefijo <code>mock/</code>.</li>
+<li><strong><code>ciel evaluate</code></strong> (CLI Typer): <code>run</code> (KPIs + Rich, exit-code por umbral),
+  <code>regression</code> (gate contra baseline) y <code>redteam</code> (prompt injection / fuga de
+  tenant con assertions de aislamiento).</li>
+<li><strong><code>ciel.eval</code></strong>: <code>Evaluator</code>, <code>EvalCase</code>, <code>load_dataset</code> (YAML) y métricas
+  deterministas propias (<code>exact_match</code>, <code>contains</code>, <code>f1_token</code>, <code>faithfulness</code>,
+  <code>context_relevance</code>, <code>answer_relevance</code>).</li>
+<li>Integración <strong>opt-in</strong> con DeepEval/RAGAS/TruLens vía extra <code>eval</code> (degrada a
+  métricas propias si no está instalado).</li>
+<li><strong>CI</strong>: nuevo job <code>eval</code> (offline, <code>MockProvider</code>, sin red) para regression
+  en PRs.</li>
+</ul>
+<h3 id="v013-autonomia-ii-auto-aprendizaje"><a class="headerlink" href="#v013-autonomia-ii-auto-aprendizaje" title="Permanent link">&para;</a>v0.13 — 📋 Autonomía II: auto-aprendizaje</h3>
+<ul>
+<li>Self-reflection y learning-from-failure; <strong>prompt evolution</strong> versionado;
+  introspección y estado cognitivo explicable.</li>
+</ul>
+<h3 id="v014-autonomia-iii-curricula-y-exploracion"><a class="headerlink" href="#v014-autonomia-iii-curricula-y-exploracion" title="Permanent link">&para;</a>v0.14 — 📋 Autonomía III: curricula y exploración</h3>
+<ul>
+<li>Autonomous goal setting + curriculum; knowledge graph y transfer learning
+  entre dominios.</li>
+</ul>
+<h3 id="v015-inteligencia-colectiva"><a class="headerlink" href="#v015-inteligencia-colectiva" title="Permanent link">&para;</a>v0.15 — 📋 Inteligencia colectiva</h3>
+<ul>
+<li>Cross-agent knowledge transfer; composición y marketplace de skills;
+  skill evolution tree y métricas de velocidad de aprendizaje.</li>
+</ul>
+<h3 id="v016-apis-multi-lenguaje-y-despliegue-moderno"><a class="headerlink" href="#v016-apis-multi-lenguaje-y-despliegue-moderno" title="Permanent link">&para;</a>v0.16 — 📋 APIs multi-lenguaje y despliegue moderno</h3>
+<ul>
+<li>API REST/gRPC para exponer agentes; SDKs (TS/Go/Java/Rust); IaC y GitOps.</li>
+</ul>
+<h3 id="v017-observability-ga-y-multi-cloud"><a class="headerlink" href="#v017-observability-ga-y-multi-cloud" title="Permanent link">&para;</a>v0.17 — 📋 Observability GA y multi-cloud</h3>
+<ul>
+<li>OTel a collector real con dashboards/alertas; integraciones (LangFuse, W&amp;B,
+  DataDog, PagerDuty); multi-cloud sin vendor lock-in.</li>
+</ul>
+<h3 id="v018-api-stability-y-ecosistema"><a class="headerlink" href="#v018-api-stability-y-ecosistema" title="Permanent link">&para;</a>v0.18 — 📋 API stability y ecosistema</h3>
+<ul>
+<li>API pública estable (semver + deprecación); ecosistema de plugins, galería de
+  templates, docs bilingüe (es/en), benchmark público.</li>
+</ul>
+<h3 id="v10-ga-madurez-meta-agente"><a class="headerlink" href="#v10-ga-madurez-meta-agente" title="Permanent link">&para;</a>v1.0 — 📋 GA / Madurez (meta-agente)</h3>
+<blockquote>
+<p><strong>v1.0.0 se reserva para la madurez real del framework.</strong> No se lanzará la
+versión 1 hasta completar todas las fases previas (v0.10–v0.18) y considerar
+que Ciel es un framework maduro y apto para producción a nivel GA. Todas las
+versiones intermedias son <code>0.x</code> (pre-1.0).</p>
+</blockquote>
+<ul>
+<li>Meta-agentes que eligen estrategia y auto-optimizan su aprendizaje; límites de
+  seguridad autónomos que evolucionan con la experiencia; compliance automático
+  (SOC2/ISO/GDPR) y disaster recovery. API estable, SLA y despliegue multi-cloud.</li>
+</ul>
+<hr />
+<h2 id="como-seguir-el-progreso"><a class="headerlink" href="#como-seguir-el-progreso" title="Permanent link">&para;</a>Cómo seguir el progreso</h2>
+<ul>
+<li>Releases en PyPI: <code>pip install mana-ciel</code> / <code>uv add mana-ciel</code>.</li>
+<li>CHANGELOG y guías en este mismo sitio.</li>
+<li>Cada versión menor se acompaña de tag, wheels y notas de upgrade.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Volver al principio
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.instant", "navigation.tracking", "navigation.top", "navigation.indexes", "toc.follow", "toc.integrate", "content.code.copy", "content.code.annotate", "content.tabs.link", "search.suggest", "search.highlight", "search.share"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado al portapapeles", "clipboard.copy": "Copiar al portapapeles", "search.result.more.one": "1 m\u00e1s en esta p\u00e1gina", "search.result.more.other": "# m\u00e1s en esta p\u00e1gina", "search.result.none": "No se encontraron documentos", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Teclee para comenzar b\u00fasqueda", "search.result.term.missing": "Falta", "select.version": "Seleccionar versi\u00f3n"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
