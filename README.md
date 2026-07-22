@@ -1,6 +1,7 @@
 # Ciel Agent Framework
 
 [![Documentación](https://img.shields.io/badge/docs-MkDocs%20Material-teal?style=flat&logo=mkdocs&logoColor=white)](https://ander-labs.github.io/ciel-agent-framework/)
+[![Licencia](https://img.shields.io/badge/license-AGPLv3-blue.svg)](LICENSE)
 [Documentación oficial](https://ander-labs.github.io/ciel-agent-framework/)
 
 Enterprise-grade framework to build model-agnostic, deploy-agnostic autonomous agents and multi-agent systems with harness-first principles.
@@ -283,10 +284,20 @@ Ciel está diseñado para extenderse sin tocar el core:
 - **Plugins**: instala cualquier paquete que exponga un entry point `ciel.plugins` (grupos `ciel.providers` / `ciel.tools` / `ciel.agents`) y Ciel lo auto-descubre vía `ciel.plugins.default_registry`. Ver [`docs/guide/plugins.md`](docs/guide/plugins.md).
 - **Tools propias**: implementa la firma oficial de tool callable — `callable_(arguments, *, tool_call_id, tenant_id) -> ToolResult | dict | Any` — usada por `ciel.runtime.ToolProvider.execute` (builtins, plugins y tools de usuario comparten la misma firma). Ver [`docs/guide/tools.md`](docs/guide/tools.md).
 
-## License
+## Licencia
 
-- Core framework: **AGPL-3.0-or-later**
-- Commercial dual license available for regulated deployments.
+Ciel Agent Framework se distribuye **únicamente** bajo la licencia
+**GNU Affero General Public License v3 (AGPL-3.0-or-later)**. No existe ningún
+esquema de licencia dual ni licencia comercial alternativa.
+
+El texto completo de la licencia se encuentra en el archivo [`LICENSE`](LICENSE).
+
+## Contribuciones
+
+¡Las contribuciones son bienvenidas! Antes de enviar código, lee la
+[guía de contribuciones](CONTRIBUTING.md), donde encontrarás instrucciones de
+setup con `uv`, estándar de estilo, cómo correr los tests y la convención de
+commits.
 
 ## Documentación
 

@@ -166,7 +166,7 @@ print(resp.text)
 | **Versión actual** | `0.10.0` — Providers y multimodal (multimodal nativo, meta-provider LiteLLM, Azure OpenAI, Ollama local, vLLM/TGI vía prefijos en `auto_provider`) |
 | **Repositorio** | <https://github.com/Ander-Labs/ciel-agent-framework> |
 | **Releases** | <https://github.com/Ander-Labs/ciel-agent-framework/releases> |
-| **Licencia** | AGPL-3.0-or-later (dual comercial disponible) |
+| **Licencia** | AGPL-3.0-or-later (única) |
 
 ¿Vienes de una versión anterior? Revisa la
 [guía de upgrade](upgrade.md).
