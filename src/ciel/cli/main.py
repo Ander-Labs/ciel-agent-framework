@@ -362,6 +362,11 @@ def _load_eval_group():
     return group
 
 
+def _load_reflect_group():
+    from ciel.cli.reflect import reflect_app as group
+    return group
+
+
 def _load_studio_group():
     from ciel.cli.studio_cli import studio_app as group
     return group
@@ -378,4 +383,5 @@ app.add_typer(_load_rbac_group(), name="rbac")
 app.add_typer(_load_cost_group(), name="cost")
 app.add_typer(_load_skills_group(), name="skills")
 app.add_typer(_load_eval_group(), name="evaluate")
+app.add_typer(_load_reflect_group(), name="reflect")
 app.add_typer(_load_studio_group(), name="studio")

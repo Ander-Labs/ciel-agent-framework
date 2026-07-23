@@ -156,12 +156,15 @@ Capa de evaluación y testing reproducible, offline-safe por defecto:
 - **CI**: nuevo job `eval` (offline, `MockProvider`, sin red) para regression
   en PRs.
 
-### v0.13 — 📋 Autonomía II: auto-aprendizaje
+### v0.13 — ✅ Disponible (Fase 19: Autonomía II)
 
-- Self-reflection y learning-from-failure; **prompt evolution** versionado;
-  introspección y estado cognitivo explicable.
+- **Auto-aprendizaje (self-reflection + learning-from-failure)**: `ciel.runtime.reflection_agent_integration` engancha `Agent(reflection=True)` y, tras cada run, genera lecciones deterministas (offline) cuando un tool falla; las persiste como memoria episódica `role="lesson"` (multitenant, reutiliza F17).
+- **Prompt evolution versionado**: `ciel.runtime.prompt_versioning` (`PromptRegistry`, `PromptVersion`) versiona instructions con semver + `sha256` + linaje, persistido en SQLite/Postgres vía `StateBackend` (aislado por `tenant_id`).
+- **Introspección / estado cognitivo**: `ciel.runtime.cognitive_state` (`CognitiveState`, `CognitiveSnapshot`) registra un snapshot post-run en `cognitive_state_log` e inyecta un bloque `[Estado cognitivo]` en el system prompt; expone `Agent.introspect()`.
+- **`ciel reflect`** (CLI): `run` (KPIs de auto-reflexión con `MockProvider`), `history` (evolution_tree de un prompt) e `introspect` (estado cognitivo de una sesión).
+- **CI**: nuevo job `reflect` (offline, `MockProvider`, sin red).
 
-### v0.14 — 📋 Autonomía III: curricula y exploración
+### v0.14 — 📋 Fase 20: Autonomía III: curricula y exploración
 
 - Autonomous goal setting + curriculum; knowledge graph y transfer learning
   entre dominios.

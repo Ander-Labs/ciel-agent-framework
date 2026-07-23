@@ -133,3 +133,53 @@ si existía o `not found` + `exit 1` si no.
 > `create`/`verify`/`remove` no persisten entre invocaciones separadas. Para
 > flujos persistentes usa la API de `ciel.runtime.skills_lib` directamente
 > (ver [`docs/guide/skills.md`](../guide/skills.md)).
+
+---
+
+## `ciel reflect` — auto-reflexión e introspección (Fase 19, v0.13)
+
+Subcomando Typer registrado como `ciel reflect`. **Offline-safe** (usa
+`MockProvider` por defecto, sin red ni API keys). Reutiliza `ciel.eval.Evaluator`
+para medir KPIs de auto-aprendizaje sobre un dataset.
+
+```bash
+ciel reflect run --dataset tests/eval/smoke.yaml --provider mock --threshold 0.0
+ciel reflect history --name <prompt>
+ciel reflect introspect --session <id> [--tenant-id <tenant>]
+```
+
+### `ciel reflect run`
+
+Corre un dataset con `MockProvider` (o `--model mock/echo`) y reporta KPIs de
+auto-reflexión en una tabla Rich. Si `pass_rate < --threshold`, hace `exit 1`.
+
+| Opción | Requerida | Descripción |
+|---|---|---|
+| `--dataset` | sí | Ruta al YAML del dataset (formato `ciel.eval.load_dataset`). |
+| `--provider` | no | Proveedor evaluable (`mock` por defecto). |
+| `--model` | no | Model id (`mock/echo`, `mock/map`, `mock/fixed`). |
+| `--mock-response` | no | Respuesta fija (modo `fixed`). |
+| `--threshold` | no | Umbral mínimo de `pass_rate` (default `0.8`). |
+
+### `ciel reflect history`
+
+Imprime el `evolution_tree` de un prompt versionado (`ciel.runtime.prompt_versioning.PromptRegistry`),
+en una tabla Rich con columnas `versión` / `parent` / `sha256` / `changelog`.
+Requiere `--name`; `--tenant-id` opcional (aislamiento multitenant).
+
+### `ciel reflect introspect`
+
+Vuelca los últimos snapshots de `cognitive_state_log` de una sesión
+(`ciel.runtime.cognitive_state`). Requiere `--session`; `--tenant-id` y `--limit`
+opcionales.
+
+::: ciel.cli.evaluate
+    options:
+      show_root_heading: false
+      members: true
+
+::: ciel.cli.reflect
+    options:
+      show_root_heading: false
+      members: true
+

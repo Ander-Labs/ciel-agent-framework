@@ -127,6 +127,53 @@ class StateBackend(abc.ABC):
     ) -> None:
         ...
 
+    # --- prompts versionados (Fase 19, tenant-filtered) -------------------
+    @abc.abstractmethod
+    def prompt_save(
+        self,
+        *,
+        tenant_id: Optional[str],
+        name: str,
+        version: str,
+        prompt_text: str,
+        value_json: str,
+        sha256: str,
+        previous_version: Optional[str],
+        created_at: str,
+    ) -> None:
+        ...
+
+    @abc.abstractmethod
+    def prompt_get(
+        self, *, tenant_id: Optional[str], name: str, version: Optional[str] = None
+    ) -> Optional[dict]:
+        ...
+
+    @abc.abstractmethod
+    def prompt_get_history(
+        self, *, tenant_id: Optional[str], name: str
+    ) -> List[dict]:
+        ...
+
+    # --- log de estado cognitivo (Fase 19, tenant-filtered) ---------------
+    @abc.abstractmethod
+    def state_log_append(
+        self,
+        *,
+        tenant_id: Optional[str],
+        session_id: str,
+        prompt_version: Optional[str],
+        value_json: str,
+        created_at: str,
+    ) -> None:
+        ...
+
+    @abc.abstractmethod
+    def state_log_get_recent(
+        self, *, tenant_id: Optional[str], session_id: str, limit: int = 16
+    ) -> List[dict]:
+        ...
+
     @abc.abstractmethod
     def close(self) -> None:
         ...
@@ -218,6 +265,14 @@ def init_schema(conn) -> None:  # type: ignore[no-untyped-def]
             UNIQUE(tenant_id, session_id, memory_id)
         );
         """
+    )
+    # --- prompts versionados (Fase 19, tenant-filtered) --------------------
+    conn.execute(
+        'CREATE TABLE IF NOT EXISTS prompt_versions (id INTEGER PRIMARY KEY AUTOINCREMENT, tenant_id TEXT, name TEXT, version TEXT, prompt_text TEXT, value_json TEXT, sha256 TEXT, previous_version TEXT, created_at TEXT, UNIQUE(tenant_id, name, version))'
+    )
+    # --- log de estado cognitivo (Fase 19, tenant-filtered) ----------------
+    conn.execute(
+        'CREATE TABLE IF NOT EXISTS cognitive_state_log (id INTEGER PRIMARY KEY AUTOINCREMENT, tenant_id TEXT, session_id TEXT, prompt_version TEXT, value_json TEXT, created_at TEXT)'
     )
     if _fts5_available(conn):
         try:
@@ -537,6 +592,107 @@ class SqliteStateBackend(StateBackend):
         )
         self.conn.commit()
 
+    # --- prompts versionados (Fase 19, tenant-filtered) ---------------------
+    def prompt_save(
+        self,
+        *,
+        tenant_id: Optional[str],
+        name: str,
+        version: str,
+        prompt_text: str,
+        value_json: str,
+        sha256: str,
+        previous_version: Optional[str],
+        created_at: str,
+    ) -> None:
+        tenant_value = self._sentinel(tenant_id)
+        self.conn.execute(
+            """
+            INSERT INTO prompt_versions (tenant_id, name, version, prompt_text, value_json, sha256, previous_version, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(tenant_id, name, version) DO UPDATE SET
+                prompt_text = excluded.prompt_text,
+                value_json = excluded.value_json,
+                sha256 = excluded.sha256,
+                previous_version = excluded.previous_version,
+                created_at = excluded.created_at
+            """,
+            (tenant_value, name, version, prompt_text, value_json, sha256, previous_version, created_at),
+        )
+        self.conn.commit()
+
+    def prompt_get(
+        self, *, tenant_id: Optional[str], name: str, version: Optional[str] = None
+    ) -> Optional[dict]:
+        tenant_value = self._sentinel(tenant_id)
+        if version:
+            row = self.conn.execute(
+                "SELECT value_json FROM prompt_versions WHERE tenant_id = ? AND name = ? AND version = ?",
+                (tenant_value, name, version),
+            ).fetchone()
+        else:
+            row = self.conn.execute(
+                "SELECT value_json FROM prompt_versions WHERE tenant_id = ? AND name = ? ORDER BY id DESC LIMIT 1",
+                (tenant_value, name),
+            ).fetchone()
+        if row is None:
+            return None
+        return self._normalize_row(row["value_json"])
+
+    def prompt_get_history(
+        self, *, tenant_id: Optional[str], name: str
+    ) -> List[dict]:
+        tenant_value = self._sentinel(tenant_id)
+        rows = self.conn.execute(
+            "SELECT value_json FROM prompt_versions WHERE tenant_id = ? AND name = ? ORDER BY id ASC",
+            (tenant_value, name),
+        ).fetchall()
+        out: List[dict] = []
+        for row in rows:
+            parsed = self._normalize_row(row["value_json"])
+            if isinstance(parsed, dict):
+                out.append(parsed)
+        return out
+
+    # --- log de estado cognitivo (Fase 19, tenant-filtered) ----------------
+    def state_log_append(
+        self,
+        *,
+        tenant_id: Optional[str],
+        session_id: str,
+        prompt_version: Optional[str],
+        value_json: str,
+        created_at: str,
+    ) -> None:
+        tenant_value = self._sentinel(tenant_id)
+        self.conn.execute(
+            """
+            INSERT INTO cognitive_state_log (tenant_id, session_id, prompt_version, value_json, created_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (tenant_value, session_id, prompt_version, value_json, created_at),
+        )
+        self.conn.commit()
+
+    def state_log_get_recent(
+        self, *, tenant_id: Optional[str], session_id: str, limit: int = 16
+    ) -> List[dict]:
+        tenant_value = self._sentinel(tenant_id)
+        rows = self.conn.execute(
+            """
+            SELECT value_json FROM cognitive_state_log
+            WHERE tenant_id = ? AND session_id = ?
+            ORDER BY id DESC LIMIT ?
+            """,
+            (tenant_value, session_id, limit),
+        ).fetchall()
+        out: List[dict] = []
+        for row in rows:
+            parsed = self._normalize_row(row["value_json"])
+            if isinstance(parsed, dict):
+                out.append(parsed)
+        return out
+
     def close(self) -> None:
         self.conn.close()
 
@@ -615,6 +771,36 @@ class PostgresStateBackend(StateBackend):
                 "memory_id",
                 _name="uq_memep_tsm",
             ),
+        )
+        self._prompt_versions = Table(
+            "prompt_versions",
+            self._meta,
+            Column("id", Integer, primary_key=True, autoincrement=True),
+            Column("tenant_id", String(255)),
+            Column("name", String(1024), nullable=False),
+            Column("version", String(64), nullable=False),
+            Column("prompt_text", Text),
+            Column("value_json", Text),
+            Column("sha256", String(64)),
+            Column("previous_version", String(64)),
+            Column("created_at", String(64)),
+            Column(
+                "UNIQUE",
+                "tenant_id",
+                "name",
+                "version",
+                _name="uq_pv_tnv",
+            ),
+        )
+        self._cognitive_state_log = Table(
+            "cognitive_state_log",
+            self._meta,
+            Column("id", Integer, primary_key=True, autoincrement=True),
+            Column("tenant_id", String(255)),
+            Column("session_id", String(255), nullable=False),
+            Column("prompt_version", String(64)),
+            Column("value_json", Text),
+            Column("created_at", String(64)),
         )
         self._create_schema()
 
@@ -858,6 +1044,145 @@ class PostgresStateBackend(StateBackend):
                     self._memory_episodic.c.session_id == session_id,
                 )
             )
+
+    # --- prompts versionados (Fase 19, tenant-filtered) ---------------------
+    def prompt_save(
+        self,
+        *,
+        tenant_id: Optional[str],
+        name: str,
+        version: str,
+        prompt_text: str,
+        value_json: str,
+        sha256: str,
+        previous_version: Optional[str],
+        created_at: str,
+    ) -> None:
+        from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+        tenant_value = self._sentinel_str(tenant_id)
+        stmt = pg_insert(self._prompt_versions).values(
+            tenant_id=tenant_value,
+            name=name,
+            version=version,
+            prompt_text=prompt_text,
+            value_json=value_json,
+            sha256=sha256,
+            previous_version=previous_version,
+            created_at=created_at,
+        )
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["tenant_id", "name", "version"],
+            set_={
+                "prompt_text": stmt.excluded.prompt_text,
+                "value_json": stmt.excluded.value_json,
+                "sha256": stmt.excluded.sha256,
+                "previous_version": stmt.excluded.previous_version,
+                "created_at": stmt.excluded.created_at,
+            },
+        )
+        with self.engine.begin() as conn:
+            conn.execute(stmt)
+
+    def prompt_get(
+        self, *, tenant_id: Optional[str], name: str, version: Optional[str] = None
+    ) -> Optional[dict]:
+        from sqlalchemy import select
+
+        tenant_value = self._sentinel_str(tenant_id)
+        if version:
+            stmt = (
+                select(self._prompt_versions.c.value_json)
+                .where(
+                    self._prompt_versions.c.tenant_id == tenant_value,
+                    self._prompt_versions.c.name == name,
+                    self._prompt_versions.c.version == version,
+                )
+            )
+        else:
+            stmt = (
+                select(self._prompt_versions.c.value_json)
+                .where(
+                    self._prompt_versions.c.tenant_id == tenant_value,
+                    self._prompt_versions.c.name == name,
+                )
+                .order_by(self._prompt_versions.c.id.desc())
+                .limit(1)
+            )
+        with self.engine.connect() as conn:
+            row = conn.execute(stmt).fetchone()
+        if row is None:
+            return None
+        return self._normalize_row(row[0])
+
+    def prompt_get_history(
+        self, *, tenant_id: Optional[str], name: str
+    ) -> List[dict]:
+        from sqlalchemy import select
+
+        tenant_value = self._sentinel_str(tenant_id)
+        with self.engine.connect() as conn:
+            rows = conn.execute(
+                select(self._prompt_versions.c.value_json)
+                .where(
+                    self._prompt_versions.c.tenant_id == tenant_value,
+                    self._prompt_versions.c.name == name,
+                )
+                .order_by(self._prompt_versions.c.id.asc())
+            ).fetchall()
+        out: List[dict] = []
+        for row in rows:
+            parsed = self._normalize_row(row[0])
+            if isinstance(parsed, dict):
+                out.append(parsed)
+        return out
+
+    # --- log de estado cognitivo (Fase 19, tenant-filtered) ----------------
+    def state_log_append(
+        self,
+        *,
+        tenant_id: Optional[str],
+        session_id: str,
+        prompt_version: Optional[str],
+        value_json: str,
+        created_at: str,
+    ) -> None:
+        from sqlalchemy import insert
+
+        tenant_value = self._sentinel_str(tenant_id)
+        with self.engine.begin() as conn:
+            conn.execute(
+                insert(self._cognitive_state_log).values(
+                    tenant_id=tenant_value,
+                    session_id=session_id,
+                    prompt_version=prompt_version,
+                    value_json=value_json,
+                    created_at=created_at,
+                )
+            )
+
+    def state_log_get_recent(
+        self, *, tenant_id: Optional[str], session_id: str, limit: int = 16
+    ) -> List[dict]:
+        from sqlalchemy import select
+
+        tenant_value = self._sentinel_str(tenant_id)
+        with self.engine.connect() as conn:
+            rows = conn.execute(
+                select(self._cognitive_state_log.c.value_json)
+                .where(
+                    self._cognitive_state_log.c.tenant_id == tenant_value,
+                    self._cognitive_state_log.c.session_id == session_id,
+                )
+                .order_by(self._cognitive_state_log.c.id.desc())
+                .limit(limit)
+            ).fetchall()
+        out: List[dict] = []
+        for row in rows:
+            parsed = self._normalize_row(row[0])
+            if isinstance(parsed, dict):
+                out.append(parsed)
+        return out
 
     def is_ready(self) -> bool:
         from sqlalchemy import text

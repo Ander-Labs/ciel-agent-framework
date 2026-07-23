@@ -3,6 +3,36 @@
 Todas las versions siguen [SemVer](https://semver.org/lang/es/). v1.0.0 está
 reservada para la madurez/GA del framework; las fases pendientes son `0.x`.
 
+## [0.13.0] — Fase 19: Autonomía II (auto-aprendizaje)
+
+### Nuevo
+- **Self-reflection + learning-from-failure** (`ciel.runtime.reflection_agent_integration`):
+  `Agent(reflection=True)` genera tras cada run una lección determinista (offline,
+  sin red) cuando un tool falla, y la persiste como memoria episódica
+  `role="lesson"` (multitenant, reutiliza F17). Disponible en la property
+  aditiva `AgentResponse.reflection`.
+- **Prompt evolution versionado** (`ciel.runtime.prompt_versioning`):
+  `PromptRegistry` / `PromptVersion` versionan las `instructions` con semver +
+  `sha256` + linaje (`evolution_tree`), persistido en SQLite/Postgres vía
+  `StateBackend` (aislado por `tenant_id`).
+- **Introspección / estado cognitivo** (`ciel.runtime.cognitive_state`):
+  `Agent(introspection=True)` registra un `CognitiveSnapshot` post-run en
+  `cognitive_state_log` e inyecta un bloque `[Estado cognitivo]` en el system
+  prompt; expone `Agent.introspect()`.
+- **`ciel reflect`** (CLI Typer, `ciel.cli.reflect`): `run` (KPIs de
+  auto-reflexión con `MockProvider`), `history` (evolution_tree de un prompt) e
+  `introspect` (estado cognitivo de una sesión). Cableado en `ciel.cli.main`.
+- **CI**: nuevo job `reflect` (offline, `MockProvider`, sin red).
+
+### Cambios internos
+- `StateBackend` (SQLite + Postgres): tablas `prompt_versions` y
+  `cognitive_state_log` y sus métodos (`prompt_save`/`prompt_get`/
+  `prompt_get_history`, `state_log_append`/`state_log_get_recent`), con filtro
+  estricto por `tenant_id`.
+- API pública **aditiva**: no se rompen `Agent`, `AgentResponse`, `ToolResult`
+  ni `ChatProvider`; solo se añaden kwargs (`reflection=`, `introspection=`) y
+  módulos `install_*_support`.
+
 ## [0.12.0] — Fase 18: Evaluación y testing
 
 ### Nuevo

@@ -376,6 +376,18 @@ class AgentResponse:
             return turn.messages
         return (self.raw.response.choice.message,)
 
+    @property
+    def reflection(self) -> Any:
+        """Resumen de reflexión post-run (Fase 19), o ``None`` si no aplica.
+
+        Aditivo: el runtime lo coloca en ``raw.metadata["reflection"]`` cuando
+        la reflexión está habilitada; degrada a ``None`` si no se instaló.
+        """
+        try:
+            return getattr(self.raw, "metadata", {}).get("reflection")
+        except AttributeError:  # pragma: no cover - defensivo
+            return None
+
     def __str__(self) -> str:  # pragma: no cover - cosmetic
         return self.text
 
@@ -642,3 +654,32 @@ from ciel.runtime.memory_episodic import EpisodicStore, MemoryConfig  # noqa: E4
 
 install_agent_memory_support(Agent)
 __all__ = list(__all__) + ["EpisodicStore", "MemoryConfig", "AgentMemory"]
+
+# Fase 19 — Self-reflection + learning-from-failure (aditiva, offline-safe).
+# Engancha Agent(reflection=...) sin reescribir la API existente.
+from ciel.runtime.reflection_agent_integration import (  # noqa: E402
+    AgentReflection,
+    ReflectionConfig,
+    install_agent_reflection_support,
+)
+
+install_agent_reflection_support(Agent)
+__all__ = list(__all__) + ["AgentReflection", "ReflectionConfig"]
+
+# Fase 19 — Introspección / estado cognitivo (aditiva, offline-safe).
+# Engancha Agent(introspection=...) sin reescribir la API existente.
+from ciel.runtime.cognitive_state import (  # noqa: E402
+    CognitiveSnapshot,
+    CognitiveState,
+    IntrospectionConfig,
+    IntrospectionReport,
+    install_cognitive_state_support,
+)
+
+install_cognitive_state_support(Agent)
+__all__ = list(__all__) + [
+    "CognitiveSnapshot",
+    "CognitiveState",
+    "IntrospectionConfig",
+    "IntrospectionReport",
+]

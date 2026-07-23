@@ -89,6 +89,30 @@ añadido: pasas `tenant_id=` en el runtime y en los tools.
 - `EpisodicStore`: memoria episódica nativa por `(tenant_id, session_id)` (SQLite), inyectada en el agente vía `Agent(memory=...)`. Aislada por tenant, offline-safe.
 - `CheckpointStore` + `CheckpointedAgentRuntime`: punto de reanudación durable.
 
+## Auto-aprendizaje (Autonomía II, v0.13)
+
+Tres primitivas aditivas y **offline-safe** (sin red ni API keys) que convierten
+al agente en capaz de aprender de sus fallos y volverse explicable:
+
+- **Self-reflection + learning-from-failure** (`ciel.runtime.reflection_agent_integration`):
+  `Agent(reflection=True)` genera tras cada run una *lección* determinista cuando
+  un tool falla (resumen estructurado de qué tool falló y por qué), y la persiste
+  como memoria episódica `role="lesson"` (multitenant, reutiliza F17). El resumen
+  está disponible en `AgentResponse.reflection`.
+- **Prompt evolution versionado** (`ciel.runtime.prompt_versioning`):
+  `PromptRegistry` / `PromptVersion` versionan las `instructions` con semver +
+  `sha256` + linaje, persistido en SQLite/Postgres vía `StateBackend` (aislado
+  por `tenant_id`). `registry.update(name, text, bump="minor")` crea una nueva
+  versión trazable.
+- **Introspección / estado cognitivo** (`ciel.runtime.cognitive_state`):
+  `Agent(introspection=True)` registra un `CognitiveSnapshot` post-run (versión de
+  prompt activa, turnos de memoria, tool calls, fallo, confianza heurística) en
+  `cognitive_state_log` e inyecta un bloque `[Estado cognitivo]` en el system
+  prompt. `agent.introspect()` vuelca los últimos snapshots.
+
+Todas se enganchan sin reescribir `ciel.api`: patron `install_*_support` (igual
+que memoria/skills). La CLI `ciel reflect` las opera desde línea de comandos.
+
 ## Graph / Flow
 
 `ciel.orchestration.graph` define grafos de nodos con estado. Un nodo puede

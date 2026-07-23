@@ -63,3 +63,28 @@ jobs:
 
       - name: CLI smoke — ciel evaluate run (MockProvider)
         run: uv run ciel evaluate run --dataset tests/eval/smoke.yaml --provider mock --threshold 0.0
+
+  reflect:
+    name: reflect (offline, ubuntu, py3.14)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python 3.14
+        run: uv python install 3.14
+
+      - name: Install project (core + reflect tests)
+        run: uv sync
+
+      - name: Run reflect test-suite (offline, sin red)
+        run: uv run pytest tests/test_prompt_versioning.py tests/test_reflection.py tests/test_cognitive_state.py tests/cli/test_reflect.py -q
+
+      - name: CLI smoke — ciel reflect run (MockProvider)
+        run: uv run ciel reflect run --dataset tests/eval/smoke.yaml --provider mock --threshold 0.0

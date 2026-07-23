@@ -38,3 +38,18 @@ proveedor y ejemplos de partes).
     options:
       show_root_heading: false
       members: true
+
+::: ciel.runtime.prompt_versioning
+    options:
+      show_root_heading: false
+      members: true
+
+::: ciel.runtime.reflection_agent_integration
+    options:
+      show_root_heading: false
+      members: true
+
+::: ciel.runtime.cognitive_state
+    options:
+      show_root_heading: false
+      members: true

@@ -1884,7 +1884,7 @@ wheels = [
 
 [[package]]
 name = "mana-ciel"
-version = "0.12.0"
+version = "0.13.0"
 source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
